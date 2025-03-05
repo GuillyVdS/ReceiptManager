@@ -1,0 +1,28 @@
+{
+  "name": "receipt-processor",
+  "version": "1.0.0",
+  "main": "dist/processReceipts.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@types/node": "^22.13.8",
+    "inquirer": "^8.2.6",
+    "nodemailer": "^6.10.0",
+    "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.7",
+    "@types/pdf-parse": "^1.1.4",
+    "source-map-support": "^0.5.21",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.8.2"
+  }
+}
