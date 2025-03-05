@@ -1,13 +1,14 @@
 import inquirer from 'inquirer';
 import { ReceiptHandler } from './ReceiptHandler';
+import { AllocationsHandler } from './AllocationsHandler';
 
 export class Menu {
     private receiptHandler: ReceiptHandler;
-    //private allocationsHandler: AllocationsHandler;
+    private allocationsHandler: AllocationsHandler;
 
     constructor() {
         this.receiptHandler = new ReceiptHandler();
-        //this.allocationsHandler = new AllocationsHandler();
+        this.allocationsHandler = new AllocationsHandler();
     }
 
     // Main Menu
@@ -81,6 +82,8 @@ export class Menu {
             ]
         });
 
+        let Allocations = await this.allocationsHandler.getExistingAllocations();    
+
         switch (answers.action) {
             case 'View current allocations':
                 //await this.allocationsHandler.getExistingAllocations();
@@ -89,7 +92,7 @@ export class Menu {
                 //await this.allocationsHandler.removeItemFromAllocations();
                 break;
             case 'Reset allocations':
-                //await this.allocationsHandler.resetAllocations();
+                await this.allocationsHandler.resetAllocations();
                 break;
             case 'Back':
                 return; // Back to main menu
