@@ -12,13 +12,20 @@ export class LineItems {
         this.itemData = {};
     }
 
-    public loadItemData(filepath: string): Record<string, LineItem[]> {
-        try {
-            const rawData = fs.readFileSync(filepath, 'utf-8');
-            return JSON.parse(rawData);
-        } catch (error) {
-            console.error('Error loading allocations:', error);
-            return {}; // Return empty object if file doesn't exist or is invalid
+    public resetItemData(): void {
+        this.itemData = {};
+    }
+
+    public loadItemData(): void {
+        let filePath = this.filePath !== '' ? this.filePath : null;
+        if (filePath) {
+            try {
+                const rawData = fs.readFileSync(filePath, 'utf-8');
+                this.itemData = JSON.parse(rawData);
+            } catch (error) {
+                console.error('Error loading allocations:', error);
+                this.itemData = {}; // Return empty object if file doesn't exist or is invalid
+            }
         }
     }
 
@@ -26,12 +33,11 @@ export class LineItems {
         const filteredLineItems: Record<string, LineItem[]> = {};
 
         if (Object.keys(this.itemData).length === 0) {
-            this.itemData = this.loadItemData(this.filePath);
+            this.loadItemData();
         }
 
         // Filter out empty categories
         Object.keys(this.itemData).forEach(category => {
-            console.log(category);
             if (this.itemData[category]?.length > 0) {
                 filteredLineItems[category] = this.itemData[category];
             }

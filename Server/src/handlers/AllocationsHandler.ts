@@ -23,4 +23,9 @@ export class AllocationsHandler {
     async saveAllocations() {
         await this.allocations.saveAllocations();
     }
+
+    async resetAllocations() {
+        this.allocations.resetItemData();
+        await this.saveAllocations();
+    }
 }

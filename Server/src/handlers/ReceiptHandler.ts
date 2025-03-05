@@ -42,6 +42,9 @@ export class ReceiptHandler {
             console.log("📂 Loaded existing allocations:");
         }
 
+        //clear item data for receipts
+        this.receipts.resetItemData();
+
         // 🟢 Step 3: process each line item
         for (const item of items) {
             console.log(`\n🔹 Checking allocation for item: "${item.description}" (£${item.amount.toFixed(2)})`);
@@ -146,8 +149,11 @@ export class ReceiptHandler {
             pdfFilePath = undefined; //
         }
 
-        pdfFilePath = path.join(pdfDirectory, pdfSelection.selectedPdf);
-        console.log(`📂 Selected PDF: ${pdfFilePath}`);
+        if (pdfFilePath) {
+            pdfFilePath = path.join(pdfDirectory, pdfSelection.selectedPdf);
+            console.log(`📂 Selected PDF: ${pdfFilePath}`);
+        }
+
         return pdfFilePath;
     }
 
