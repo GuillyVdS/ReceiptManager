@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Button } from "@mui/material";
 
 export const ReceiptsMenu = ({ onSelect }: { onSelect: (action: string) => void }) => {
     const [lineItems, setLineItems] = useState<any[]>([]);
@@ -28,8 +29,12 @@ export const ReceiptsMenu = ({ onSelect }: { onSelect: (action: string) => void 
     return (
         <div>
             <h1>Manage Receipts</h1>
-            <button onClick={fetchReceipts}>Add new receipt</button>
-            <button onClick={() => onSelect('back')}>Back</button>
+            <Button variant="contained" color="primary" onClick={fetchReceipts}>
+                Add new receipt
+            </Button>
+            <Button variant="contained" color="primary" onClick={() => onSelect('back')}>
+                Back
+            </Button>
 
             {loading && <p>Loading...</p>}
             {error && <p style={{ color: 'red' }}>{error}</p>}
