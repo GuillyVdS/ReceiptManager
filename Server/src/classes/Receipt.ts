@@ -1,15 +1,15 @@
-import { LineItems } from './LineItems';
+import { ILineItem, LineItem } from './LineItem';
 import { roundAmount } from '../utils/helpers';
 
 import path from 'path';
 
-interface LineItem {
-    description: string;
+export interface IReceiptLineItem extends ILineItem {
     amount: number;
 }
 
-export class Receipts extends LineItems {
-    itemData: { [key: string]: LineItem[] } = {};
+
+export class Receipt extends LineItem {
+    itemData: { [key: string]: IReceiptLineItem[] } = {};
 
     constructor() {
         super();
@@ -19,7 +19,7 @@ export class Receipts extends LineItems {
         let categoryTotals: { [key: string]: number } = {};
 
         Object.keys(this.itemData).forEach(category => {
-            const total = this.itemData[category].reduce((sum: number, item: LineItem) => {
+            const total = this.itemData[category].reduce((sum: number, item: IReceiptLineItem) => {
                 return roundAmount(sum + item.amount);
             }, 0);
 

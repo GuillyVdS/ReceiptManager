@@ -1,30 +1,9 @@
-import fs from 'fs';
-import pdf from 'pdf-parse';
+import { IReceiptLineItem } from './Receipt';
 
-interface LineItem {
-    description: string;
-    amount: number;
-}
-
-export class PdfParser {
-    async parsePdf(filePath: string): Promise<{ description: string; amount: number }[]> {
-        const pdfBuffer = fs.readFileSync(filePath);
-        const data = await pdf(pdfBuffer);
-
-        console.log('📜 Extracted PDF Text:\n', data.text);
-
-        // Step 1 - Extract and clean the relevant receipt info
-        const cleanedReceiptText = this.extractAndCleanReceipt(data.text);
-
-        //console.log('🧼 Cleaned Receipt Text (After Initial Sanitization):\n', cleanedReceiptText);
-
-        //parse over receipt info and extract item descriptions and prices
-        const items = this.parseLineItems(cleanedReceiptText);
-        return items;
-    }
+export class SanitizePdf {
 
     // Steps over the extracted PDF text and sanitizes the result.
-    private extractAndCleanReceipt(text: string): string {
+    public static sanitizeExtractedPDF(text: string): string {
         const lines = text.split(/\r?\n/).map(line => line.trim());
 
         let foundItemList = false;
@@ -98,12 +77,11 @@ export class PdfParser {
         return cleanedLines.join('\n'); // Return cleaned & merged receipt block
     }
 
-
-    //slightly redundant as most line items will already conform once passed through the extractAndCleanReceipt function, 
-    //however this regex prevents any more invalid items from being added
-    private parseLineItems(text: string): LineItem[] {
+    // Slightly redundant as most line items will already conform once passed through the extractAndCleanReceipt function, 
+    // however this regex prevents any more invalid items from being added
+    public static getLineItems(text: string): IReceiptLineItem[] {
         const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => line !== '');
-        const items: LineItem[] = [];
+        const items: IReceiptLineItem[] = [];
 
         const regex = /^(.+?)\s*£(\d+\.\d{2})\s*£(\d+\.\d{2})$/;
 
@@ -114,7 +92,7 @@ export class PdfParser {
 
             if (match) {
                 const description = match[1].trim(); // Capture the product description
-                const unitPrice = parseFloat(match[2]); // Capture the first price (unit price) we don't really use this for anything at the moment
+                const unitPrice = parseFloat(match[2]); // Capture the first price (unit price)
                 const totalAmount = parseFloat(match[3]); // Capture the second price (total amount)
 
                 if (!isNaN(unitPrice) && !isNaN(totalAmount) && description.length > 0) {
@@ -130,5 +108,4 @@ export class PdfParser {
 
         return items;
     }
-
 }
