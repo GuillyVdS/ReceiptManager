@@ -1,6 +1,6 @@
-import { Allocations } from '../classes/Allocations';
+import { Allocations } from '../classes/Allocation';
 
-interface LineItem {
+interface ILineItem {
     description: string;
 }
 
@@ -15,8 +15,8 @@ export class AllocationsHandler {
         return this.allocations.getFilteredLineItems();
     }
 
-    public addItemToCategory(category: string, item: LineItem) {
-        const itemToAllocate: LineItem = { description: item.description };
+    public addItemToCategory(category: string, item: ILineItem) {
+        const itemToAllocate: ILineItem = { description: item.description };
         this.allocations.addItemToCategory(category, itemToAllocate);
     }
 

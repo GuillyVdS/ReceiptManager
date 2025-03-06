@@ -1,11 +1,11 @@
 import fs from 'fs';
 
-interface LineItem {
+export interface ILineItem {
     description: string;
 }
 
-export class LineItems {
-    protected itemData: Record<string, LineItem[]>;
+export class LineItem {
+    protected itemData: Record<string, ILineItem[]>;
     protected filePath = '';
 
     constructor() {
@@ -30,7 +30,7 @@ export class LineItems {
     }
 
     public getFilteredLineItems() {
-        const filteredLineItems: Record<string, LineItem[]> = {};
+        const filteredLineItems: Record<string, ILineItem[]> = {};
 
         if (Object.keys(this.itemData).length === 0) {
             this.loadItemData();
@@ -50,7 +50,7 @@ export class LineItems {
         return Object.keys(this.itemData);
     }
 
-    public addItemToCategory(category: string, item: LineItem) {
+    public addItemToCategory(category: string, item: ILineItem) {
         if (!Array.isArray(this.itemData[category])) {
             this.itemData[category] = [];
         }

@@ -1,31 +1,24 @@
-import fs from 'fs';
-import path from 'path';
 import inquirer from 'inquirer';
 import { AllocationsHandler } from './AllocationsHandler';
-import { Receipts } from '../classes/Receipts';
-import { PdfParser } from '../classes/PdfParser';
-
-interface LineItem {
-    description: string;
-    amount: number;
-}
+import { IReceiptLineItem, Receipt } from '../classes/Receipt';
+import { PdfHandler } from '../classes/PdfHandler';
+import { ILineItem } from '../classes/LineItem';
 
 export class ReceiptHandler {
-    private pdfParser: PdfParser;
-    private receipts: Receipts;
+    private receipt: Receipt;
+    private pdfHandler: PdfHandler;
     private allocationsHandler: AllocationsHandler;
 
     constructor() {
-        this.pdfParser = new PdfParser();
+        this.receipt = new Receipt();
+        this.pdfHandler = new PdfHandler();
         this.allocationsHandler = new AllocationsHandler();
-        this.receipts = new Receipts;
     }
 
-    private async processReceipt(filePath: string, personAName: string, personBName: string) {
-        console.log("🔍 Starting PDF processing...");
-
+    private async createReceipt(filePath: string, personAName: string, personBName: string) {
         // 🟢 Step 1: extract the line items from the PDF
-        const items: LineItem[] = await this.pdfParser.parsePdf(filePath);
+        console.log("🔍 Starting PDF processing...");
+        const items: IReceiptLineItem[] = await this.pdfHandler.processPDF(filePath);
         console.log(`📄 Extracted ${items.length} items from PDF.`);
 
         if (!items.length) {
@@ -36,16 +29,37 @@ export class ReceiptHandler {
         // 🟢 Step 2: Load existing allocations from allocations.json via AllocationsHandler
         const existingAllocations = await this.allocationsHandler.getExistingAllocations();
 
-        if (Object.keys(existingAllocations).length === 0) {
-            console.log("⚠️ No existing allocations found. Starting fresh.");
-        } else {
-            console.log("📂 Loaded existing allocations:");
-        }
-
-        //clear item data for receipts
-        this.receipts.resetItemData();
-
         // 🟢 Step 3: process each line item
+        await this.allocateLineItems(items, existingAllocations, personAName, personBName);
+
+        // 🟢 Step 4: Compute and display the receipt totals and prompt to confirm receipt
+        await this.printReceiptTotals();
+
+        const answer = await inquirer.prompt({
+            type: 'confirm',
+            name: 'Save',
+            message: "Do you want to save the receipt?"
+        });
+
+        // 🟢 Step 5: Save receipt and allocation data
+        if (answer.Save) {
+            await this.receipt.saveReceipt();
+            console.log("🧾 Receipt saved successfully.");
+            await this.allocationsHandler.saveAllocations();
+            console.log("💾 Allocations saved successfully.");
+        } else {
+            console.log('Cancelled Receipt');
+        }
+    }
+
+    //takes extracted line items array and existing allocations json as input
+    //for each item we first look if it exists anywhere in the existing allocations json
+    //if it does not, the user will be prompted to assign the item to a category
+    public async allocateLineItems(items: IReceiptLineItem[], existingAllocations: Record<string, ILineItem[]>, personAName: string, personBName: string) {
+        //start with a fresh receipt
+        this.receipt.resetItemData();
+
+        //iterate over every line item
         for (const item of items) {
             console.log(`\n🔹 Checking allocation for item: "${item.description}" (£${item.amount.toFixed(2)})`);
 
@@ -56,7 +70,7 @@ export class ReceiptHandler {
                 const categoryItems = existingAllocations[category] || [];
 
                 // If the item is found in the existing allocations file, auto assign it
-                if (categoryItems.some((existingItem: any) => (existingItem as LineItem).description === item.description)) {
+                if (categoryItems.some((existingItem: any) => (existingItem as ILineItem).description === item.description)) {
                     allocatedCategory = category;
                     console.log(`✅ Found existing allocation for item "${item.description}" in "${category}".`);
                     break;
@@ -82,14 +96,14 @@ export class ReceiptHandler {
 
             //add line item to receipt
             console.log('allocating', item.description);
-            await this.receipts.addItemToCategory(allocatedCategory, item);
+            await this.receipt.addItemToCategory(allocatedCategory, item);
             console.log(`📌 Item "${item.description}" assigned to "${allocatedCategory}".`);
 
         }
+    }
 
-        // 🟢 Step 4: Compute and display the receipt totals and prompt to confirm receipt
-        const categoryTotals = await this.receipts.getCategoryTotals();
-        console.log("Receipt TOTALS:", JSON.stringify(categoryTotals, null, 2));
+    private async printReceiptTotals() {
+        const categoryTotals = await this.receipt.getCategoryTotals();
         let receiptTotal = 0;
 
         console.log("\n📊 Final Allocation Totals:");
@@ -104,57 +118,6 @@ export class ReceiptHandler {
         });
 
         console.log(`\n💰 Total cost: £${receiptTotal}`);
-
-        const answer = await inquirer.prompt({
-            type: 'confirm',
-            name: 'Save',
-            message: "Do you want to save the receipt?"
-        });
-
-        // 🟢 Step 5: Save receipt and allocation data
-        if (answer.Save) {
-            await this.receipts.saveReceipt();
-            console.log("🧾 Receipt saved successfully.");
-            await this.allocationsHandler.saveAllocations();
-            console.log("💾 Allocations saved successfully.");
-        } else {
-            console.log('Cancelled Receipt');
-        }
-    }
-
-    public async selectPDFFile(): Promise<string | undefined> {
-        const projectRoot = path.resolve(__dirname, '..', '..');
-        const pdfDirectory = path.join(projectRoot, 'ReceiptData', 'PDFInput');
-        let pdfFilePath;
-
-        // Fetch available PDFs
-        let pdfFiles = fs.readdirSync(pdfDirectory)
-            .filter(file => file.endsWith('.pdf'));
-
-        if (pdfFiles.length === 0) {
-            console.log("❌ No PDF files found in the directory.");
-            return undefined; // Return undefined if no PDF is found
-        }
-
-        //User prompt for pdf file
-        const pdfSelection = await inquirer.prompt([{
-            type: 'list',
-            name: 'selectedPdf',
-            message: 'Select a PDF file to process:',
-            choices: ['Cancel', ...pdfFiles]
-        }]);
-
-        if (pdfSelection.selectedPdf === 'Cancel') {
-            console.log("❌ Operation cancelled.");
-            pdfFilePath = undefined; //
-        }
-
-        if (pdfFilePath) {
-            pdfFilePath = path.join(pdfDirectory, pdfSelection.selectedPdf);
-            console.log(`📂 Selected PDF: ${pdfFilePath}`);
-        }
-
-        return pdfFilePath;
     }
 
     public async addNewReceipt(): Promise<void> {
@@ -176,7 +139,7 @@ export class ReceiptHandler {
 
         const { personAName, personBName } = answers;
 
-        const pdfFilePath = await this.selectPDFFile();
+        const pdfFilePath = await this.pdfHandler.selectPDFPrompt();
 
         if (!pdfFilePath) {
             //console.log("❌ No file selected, operation aborted.");
@@ -184,7 +147,7 @@ export class ReceiptHandler {
         }
 
         // Process the PDF and allocate items
-        await this.processReceipt(pdfFilePath, personAName, personBName);
+        await this.createReceipt(pdfFilePath, personAName, personBName);
     }
 }
 

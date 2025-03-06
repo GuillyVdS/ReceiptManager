@@ -1,10 +1,7 @@
-import { LineItems } from './LineItems';
+import { LineItem } from './LineItem';
 
-interface LineItem {
-    description: string;
-}
 
-export class Allocations extends LineItems {
+export class Allocations extends LineItem {
     constructor() {
         super();
         this.filePath = 'allocations.json'; // location for storing allocation
