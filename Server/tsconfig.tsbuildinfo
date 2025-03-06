@@ -1,0 +1,1 @@
+{"root":["./src/index.ts","./src/server.ts","./src/classes/allocation.ts","./src/classes/lineitem.ts","./src/classes/pdfhandler.ts","./src/classes/receipt.ts","./src/classes/sanitizepdf.ts","./src/handlers/allocationshandler.ts","./src/handlers/menu.ts","./src/handlers/receipthandler.ts","./src/utils/helpers.ts"],"version":"5.8.2"}
