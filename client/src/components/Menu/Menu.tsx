@@ -4,12 +4,6 @@ import { MainMenu } from './MainMenu';
 import { ReceiptsMenu } from './ReceiptsMenu';
 import { AllocationsMenu } from './AllocationsMenu';
 
-const ReceiptHandler = {
-  addNewReceipt: () => {
-    console.log('New receipt added.');
-  },
-};
-
 export const Menu = ({ onExit }: { onExit: () => void }) => {
   const [currentMenu, setCurrentMenu] = useState<'mainMenu' | 'manageReceipts' | 'manageAllocations'>('mainMenu');
 
@@ -25,7 +19,6 @@ export const Menu = ({ onExit }: { onExit: () => void }) => {
         onExit(); // Trigger exit
         break;
       case 'addReceipt':
-        ReceiptHandler.addNewReceipt();
         setCurrentMenu('manageReceipts');
         break;
       case 'viewAllocations':
