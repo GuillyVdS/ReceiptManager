@@ -1,9 +1,11 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
+import multer from 'multer';
 import { ReceiptHandler } from './handlers/ReceiptHandler';
 import { AllocationsHandler } from './handlers/AllocationsHandler';
 import { PdfHandler } from './classes/PdfHandler';
 import path from 'path';
+import fs from 'fs';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -20,6 +22,31 @@ const corsOptions = {
     allowedHeaders: 'Content-Type,Authorization', // Allowed headers
 };
 app.use(cors());
+
+const uploadDir = path.join(__dirname, '../ReceiptData/PDFInput');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+}
+
+// Multer storage configuration
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadDir); // Save files to "uploads" directory
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`); // Unique filename
+    }
+});
+
+// File filter to allow only PDFs
+const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+    if (file.mimetype !== 'application/pdf') {
+        return cb(new Error('Only PDF files are allowed!'));
+    }
+    cb(null, true);
+};
+
+const upload = multer({ storage, fileFilter });
 
 const receiptHandler = new ReceiptHandler();
 const allocationsHandler = new AllocationsHandler();
@@ -46,6 +73,24 @@ app.get('/lineItems/:pdfName', async (req: Request, res: Response) => {
     } catch (error) {
         res.status(500).json({ error: 'Error fetching receipt data' });
     }
+});
+
+// API endpoint to handle file upload
+app.post('/uploadPdf', (req: Request, res: Response): void => {
+    upload.single('pdf')(req, res, (err: any) => {
+        if (err) {
+            res.status(400).json({ error: err.message });
+            return;
+        }
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+        res.json({
+            message: 'File uploaded successfully',
+            filename: req.file.filename,
+            filePath: `/uploads/${req.file.filename}`
+        });
+    });
 });
 
 
