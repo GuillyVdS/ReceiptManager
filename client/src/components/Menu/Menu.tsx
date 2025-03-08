@@ -1,5 +1,5 @@
 // src/components/Menu/Menu.tsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { MainMenu } from './MainMenu';
 import { ReceiptsMenu } from './ReceiptsMenu';
 import { AllocationsMenu } from './AllocationsMenu';
