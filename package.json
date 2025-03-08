@@ -3,6 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
+    "install-all": "npm install",
+    "start-server": "npm --workspace server start",
+    "start-client": "npm --workspace client dev",
     "lint": "eslint .",
     "build": "tsc -b",
     "dev": "concurrently \"npm run dev --workspace client\" \"npm run server --workspace server\"",
@@ -13,12 +16,13 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "eslint": "^9.21.0",
+    "typescript-eslint": "^8.24.1",
     "eslint-plugin-react-hooks": "^5.1.0",
     "prettier": "^2.7.1",
     "concurrently": "^7.3.0"
   },
   "workspaces": [
     "client",
-    "Server"
+    "server"
   ]
 }
