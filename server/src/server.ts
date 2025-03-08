@@ -6,6 +6,7 @@ import { AllocationsHandler } from './handlers/AllocationsHandler';
 import { PdfHandler } from './classes/PdfHandler';
 import path from 'path';
 import fs from 'fs';
+import logger from './logger';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -59,6 +60,7 @@ app.get('/pdfList', (req: Request, res: Response) => {
         const pdfFiles = pdfHandler.getPDFList(INPUT_FOLDER);
         res.json({ pdfFiles });
     } catch (error) {
+        logger.error('Error fetching PDF list:', error);
         res.status(500).json({ error: 'Error reading input folder' });
     }
 });
@@ -71,6 +73,7 @@ app.get('/lineItems/:pdfName', async (req: Request, res: Response) => {
         const items = await pdfHandler.processPDF(pdfFilePath);
         res.json({ items });
     } catch (error) {
+        logger.error('Error fetching receipt data:', error);
         res.status(500).json({ error: 'Error fetching receipt data' });
     }
 });
@@ -79,6 +82,7 @@ app.get('/lineItems/:pdfName', async (req: Request, res: Response) => {
 app.post('/uploadPdf', (req: Request, res: Response): void => {
     upload.single('pdf')(req, res, (err: any) => {
         if (err) {
+            logger.error('Error uploading file:', err);
             res.status(400).json({ error: err.message });
             return;
         }
@@ -97,5 +101,5 @@ app.post('/uploadPdf', (req: Request, res: Response): void => {
 
 // Start server
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    logger.info(`Server running on http://localhost:${PORT}`);
 });
