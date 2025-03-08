@@ -16,6 +16,10 @@ export class LineItem {
         this.itemData = {};
     }
 
+    getItemData() {
+        return this.itemData;
+    }
+
     public loadItemData(): void {
         let filePath = this.filePath !== '' ? this.filePath : null;
         if (filePath) {

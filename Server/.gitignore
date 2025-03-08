@@ -28,3 +28,5 @@ allocations.Testing
 !ReceiptData/Output/.gitkeep
 !ReceiptData/PDFInput/.gitkeep
 
+# Ignore coverage reports
+coverage/

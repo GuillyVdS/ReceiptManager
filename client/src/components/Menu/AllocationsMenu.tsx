@@ -1,9 +1,11 @@
+import Button from "@mui/material/Button/Button";
+
 export const AllocationsMenu = ({ onSelect }: { onSelect: (action: string) => void }) => (
     <div>
         <h1>Manage Item Allocations</h1>
-        <button onClick={() => onSelect('viewAllocations')}>View current allocations</button>
-        <button onClick={() => onSelect('removeItem')}>Remove item from allocations</button>
-        <button onClick={() => onSelect('resetAllocations')}>Reset allocations</button>
-        <button onClick={() => onSelect('back')}>Back</button>
+        <Button variant="contained" color="primary" onClick={() => onSelect('viewAllocations')}>View current allocations</Button>
+        <Button variant="contained" color="primary" onClick={() => onSelect('removeItem')}>Remove item from allocations</Button>
+        <Button variant="contained" color="primary" onClick={() => onSelect('resetAllocations')}>Reset allocations</Button>
+        <Button variant="contained" color="primary" onClick={() => onSelect('back')}>Back</Button>
     </div>
 );
