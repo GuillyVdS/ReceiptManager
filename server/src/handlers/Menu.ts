@@ -1,14 +1,12 @@
 import inquirer from 'inquirer';
 import { ReceiptHandler } from './ReceiptHandler';
-import { AllocationsHandler } from './AllocationsHandler';
+import { AllocationCollection } from '../classes/AllocationCollection';
 
 export class Menu {
-    private receiptHandler: ReceiptHandler;
-    private allocationsHandler: AllocationsHandler;
+    private receiptHandler?: ReceiptHandler;
+    private allocations?: AllocationCollection;
 
     constructor() {
-        this.receiptHandler = new ReceiptHandler();
-        this.allocationsHandler = new AllocationsHandler();
     }
 
     // Main Menu
@@ -47,6 +45,9 @@ export class Menu {
 
     //Receipts Menu
     async showManageReceiptsMenu() {
+        if (!this.receiptHandler) {
+            this.receiptHandler = new ReceiptHandler();
+        }
         const answers = await inquirer.prompt({
             type: 'list',
             name: 'action',
@@ -70,6 +71,9 @@ export class Menu {
 
     //Allocations Menu
     async showManageAllocationsMenu() {
+        if (!this.allocations) {
+            this.allocations = new AllocationCollection();
+        }
         const answers = await inquirer.prompt({
             type: 'list',
             name: 'action',
@@ -82,7 +86,7 @@ export class Menu {
             ]
         });
 
-        let Allocations = await this.allocationsHandler.getExistingAllocations();    
+        //let Allocations = await this.allocations.getItems();
 
         switch (answers.action) {
             case 'View current allocations':
@@ -92,7 +96,7 @@ export class Menu {
                 //await this.allocationsHandler.removeItemFromAllocations();
                 break;
             case 'Reset allocations':
-                await this.allocationsHandler.resetAllocations();
+                await this.allocations.resetItemData();
                 break;
             case 'Back':
                 return; // Back to main menu
