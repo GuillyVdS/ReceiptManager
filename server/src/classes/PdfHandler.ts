@@ -7,7 +7,7 @@ import { IReceiptLineItem } from './LineItem';
 import { SanitizePdf } from './SanitizePdf';
 
 export class PdfHandler {
-    private static pdfDirectory = path.resolve(__dirname, '../../ReceiptData/PDFInput');
+    private static pdfDirectory = path.resolve(__dirname, '../../../ReceiptData/PDFInput');
 
     constructor() {
     }

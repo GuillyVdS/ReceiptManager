@@ -5,8 +5,8 @@ import logger from './logger';
 import { PdfHandler } from './classes/PdfHandler';
 
 const router = Router();
-const INPUT_FOLDER = path.resolve(__dirname, '../../ReceiptData/PDFInput');
-const uploadDir = path.join(__dirname, '../../ReceiptData/PDFInput');
+const INPUT_FOLDER = path.resolve(__dirname, '../ReceiptData/PDFInput');
+const uploadDir = path.join(__dirname, '../ReceiptData/PDFInput');
 const pdfHandler = new PdfHandler();
 
 const storage = multer.diskStorage({
