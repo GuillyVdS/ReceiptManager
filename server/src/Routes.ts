@@ -70,7 +70,7 @@ router.post('/uploadPdf', (req: Request, res: Response): void => {
         res.json({
             message: 'File uploaded successfully',
             filename: req.file.filename,
-            filePath: `/uploads/${req.file.filename}`
+            filePath: `/PDFInput/${req.file.filename}`
         });
     });
 });
