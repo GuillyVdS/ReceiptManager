@@ -6,7 +6,7 @@
     "start": "node dist/index.js",
     "build": "tsc",
     "test": "jest",
-    "server": "ts-node src/server.ts",
+    "server": "ts-node src/main.ts",
     "cli": "ts-node src/index.ts"
   },
   "dependencies": {

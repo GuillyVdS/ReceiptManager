@@ -1,21 +1,23 @@
 import inquirer from 'inquirer';
-import { AllocationsHandler } from './AllocationsHandler';
-import { IReceiptLineItem, Receipt } from '../classes/Receipt';
+import { IReceiptLineItem, ILineItem } from '../classes/LineItem';
+import { ReceiptCollection } from '../classes/ReceiptCollection';
+import { AllocationCollection } from '../classes/AllocationCollection';
 import { PdfHandler } from '../classes/PdfHandler';
-import { ILineItem } from '../classes/LineItem';
 
 export class ReceiptHandler {
-    private receipt: Receipt;
+    private receipt?: ReceiptCollection;
     private pdfHandler: PdfHandler;
-    private allocationsHandler: AllocationsHandler;
+    private allocations: AllocationCollection;
 
     constructor() {
-        this.receipt = new Receipt();
         this.pdfHandler = new PdfHandler();
-        this.allocationsHandler = new AllocationsHandler();
+        this.allocations = new AllocationCollection();
+        this.receipt = new ReceiptCollection();
     }
 
     private async createReceipt(filePath: string, personAName: string, personBName: string) {
+        this.receipt?.resetItemData();
+
         // 🟢 Step 1: extract the line items from the PDF
         console.log("🔍 Starting PDF processing...");
         const items: IReceiptLineItem[] = await this.pdfHandler.processPDF(filePath);
@@ -27,7 +29,7 @@ export class ReceiptHandler {
         }
 
         // 🟢 Step 2: Load existing allocations from allocations.json via AllocationsHandler
-        const existingAllocations = await this.allocationsHandler.getExistingAllocations();
+        const existingAllocations: Record<string, ILineItem[]> = this.allocations.getItems() as Record<string, ILineItem[]>;
 
         // 🟢 Step 3: process each line item
         await this.allocateLineItems(items, existingAllocations, personAName, personBName);
@@ -43,9 +45,9 @@ export class ReceiptHandler {
 
         // 🟢 Step 5: Save receipt and allocation data
         if (answer.Save) {
-            await this.receipt.saveReceipt();
+            await this.receipt!.saveReceipt();
             console.log("🧾 Receipt saved successfully.");
-            await this.allocationsHandler.saveAllocations();
+            await this.allocations.saveAllocations();
             console.log("💾 Allocations saved successfully.");
         } else {
             console.log('Cancelled Receipt');
@@ -56,9 +58,6 @@ export class ReceiptHandler {
     //for each item we first look if it exists anywhere in the existing allocations json
     //if it does not, the user will be prompted to assign the item to a category
     public async allocateLineItems(items: IReceiptLineItem[], existingAllocations: Record<string, ILineItem[]>, personAName: string, personBName: string) {
-        //start with a fresh receipt
-        this.receipt.resetItemData();
-
         //iterate over every line item
         for (const item of items) {
             console.log(`\n🔹 Checking allocation for item: "${item.description}" (£${item.amount.toFixed(2)})`);
@@ -67,10 +66,10 @@ export class ReceiptHandler {
             let allocatedCategory = '';
 
             for (const category of Object.keys(existingAllocations)) {
-                const categoryItems = existingAllocations[category] || [];
+                const categoryItems = existingAllocations[category];
 
-                // If the item is found in the existing allocations file, auto assign it
-                if (categoryItems.some((existingItem: any) => (existingItem as ILineItem).description === item.description)) {
+                // Ensure categoryItems is an array before calling some
+                if (Array.isArray(categoryItems) && categoryItems.some((existingItem: ILineItem) => existingItem.description === item.description)) {
                     allocatedCategory = category;
                     console.log(`✅ Found existing allocation for item "${item.description}" in "${category}".`);
                     break;
@@ -89,21 +88,20 @@ export class ReceiptHandler {
                 });
 
                 //assign new line item to category in allocations.json
-                await this.allocationsHandler.addItemToCategory(answer.allocation, item);
+                await this.allocations.addItemToCategory(answer.allocation, item);
 
                 allocatedCategory = answer.allocation;
             }
 
             //add line item to receipt
             console.log('allocating', item.description);
-            await this.receipt.addItemToCategory(allocatedCategory, item);
+            await this.receipt!.addItemToCategory(allocatedCategory, item);
             console.log(`📌 Item "${item.description}" assigned to "${allocatedCategory}".`);
-
         }
     }
 
     private async printReceiptTotals() {
-        const categoryTotals = await this.receipt.getCategoryTotals();
+        const categoryTotals = await this.receipt!.getCategoryTotal();
         let receiptTotal = 0;
 
         console.log("\n📊 Final Allocation Totals:");

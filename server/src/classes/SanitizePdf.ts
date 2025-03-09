@@ -1,4 +1,4 @@
-import { IReceiptLineItem } from './Receipt';
+import { IReceiptLineItem } from './ReceiptCollection';
 
 export class SanitizePdf {
 
