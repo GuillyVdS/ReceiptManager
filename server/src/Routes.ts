@@ -1,20 +1,29 @@
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 import logger from './logger';
 import { PdfHandler } from './classes/PdfHandler';
 
 const router = Router();
-const INPUT_FOLDER = path.resolve(__dirname, '../ReceiptData/PDFInput');
-const uploadDir = path.join(__dirname, '../ReceiptData/PDFInput');
 const pdfHandler = new PdfHandler();
+
+const INPUT_FOLDER = path.resolve(__dirname, '../ReceiptData/PDFInput');
+const ALLOCATIONS_FILE = path.resolve(__dirname, '../ReceiptData/allocations.json');
+const UPLOADS = path.join(__dirname, '../ReceiptData/PDFInput');
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, uploadDir);
+        cb(null, UPLOADS);
     },
     filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`);
+        let documentName = req.body.documentName || file.originalname;
+        const timestamp = Date.now();
+        const ext = path.extname(documentName);
+        const baseName = path.basename(documentName, ext);
+        documentName = `${baseName}-${timestamp}${ext}`;
+
+        cb(null, documentName);
     }
 });
 
@@ -27,23 +36,42 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
 
 const upload = multer({ storage, fileFilter });
 
-//router endpoints
-//get pdf list
-//get processed line items of single pdf
-//get existing allocated line items
-//upload new pdf to pdf list
-//post allocations
+//PDF Routes
+//############################################################################################################
 
+//get list of pdf files in the input folder
 router.get('/pdfList', (req: Request, res: Response) => {
     try {
         const pdfFiles = pdfHandler.getPDFList(INPUT_FOLDER);
-        res.json({ pdfFiles });
+        // Remove timestamps from filenames for client ease of viewing
+        const fileNames = pdfFiles.map(file => {
+            const ext = path.extname(file);
+            const baseName = path.basename(file, ext);
+            const originalName = baseName.replace(/-\d+$/, '') + ext;
+            return originalName;
+        });
+        res.json({ pdfFiles: fileNames });
     } catch (error) {
         logger.error('Error fetching PDF list:', error);
         res.status(500).json({ error: 'Error reading input folder' });
     }
 });
 
+//upload a pdf file to the server
+router.post('/uploadPdf', (req, res, next) => {
+    upload.fields([{ name: 'pdf', maxCount: 1 }, { name: 'documentName', maxCount: 1 }])(req, res, (err) => {
+        if (err) {
+            logger.error('Error parsing form data:', err);
+            return res.status(400).json({ error: err.message });
+        }
+
+        res.json({
+            message: 'File uploaded successfully'
+        });
+    });
+});
+
+//given a pdf name, extract and return the line items from the pdf
 router.get('/lineItems/:pdfName', async (req: Request, res: Response) => {
     const { pdfName } = req.params;
     const pdfFilePath = path.join(INPUT_FOLDER, pdfName);
@@ -57,33 +85,22 @@ router.get('/lineItems/:pdfName', async (req: Request, res: Response) => {
     }
 });
 
-router.post('/uploadPdf', (req: Request, res: Response): void => {
-    upload.single('pdf')(req, res, (err: any) => {
-        if (err) {
-            logger.error('Error uploading file:', err);
-            res.status(400).json({ error: err.message });
-            return;
-        }
-        if (!req.file) {
-            return res.status(400).json({ message: 'No file uploaded' });
-        }
-        res.json({
-            message: 'File uploaded successfully',
-            filename: req.file.filename,
-            filePath: `/PDFInput/${req.file.filename}`
-        });
-    });
-});
+//Allocation Routes
+//############################################################################################################
 
-//get line item allocations
-router.get('//itemAllocations', (req: Request, res: Response) => {
+//get data stored in allocations file
+router.get('/allocations', (req: Request, res: Response) => {
     try {
-        const pdfFiles = pdfHandler.getPDFList(INPUT_FOLDER);
-        res.json({ pdfFiles });
+        const allocationsData = fs.readFileSync(ALLOCATIONS_FILE, 'utf-8');
+        const allocations = JSON.parse(allocationsData);
+        res.json(allocations);
     } catch (error) {
-        logger.error('Error fetching PDF list:', error);
-        res.status(500).json({ error: 'Error reading input folder' });
+        logger.error('Error fetching allocations file:', error);
+        res.status(500).json({ error: 'Error reading allocations file' });
     }
 });
+
+//todo route for posting and updating allocations
+
 
 export default router;
