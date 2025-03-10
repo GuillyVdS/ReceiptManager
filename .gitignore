@@ -7,5 +7,6 @@ node_modules/
 # Ignore environment files (if any)
 .env
 
-# Ignore logs
+# ignore log and combined log
 logs/
+combined.log

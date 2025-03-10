@@ -3,18 +3,17 @@ import fs from 'fs';
 import pdf from 'pdf-parse';
 import path from 'path';
 
-import { IReceiptLineItem } from './Receipt';
+import { IReceiptLineItem } from './LineItem';
 import { SanitizePdf } from './SanitizePdf';
 
 export class PdfHandler {
-    private static pdfDirectory = path.resolve(__dirname, '../../ReceiptData/PDFInput');
+    private static pdfDirectory = path.resolve(__dirname, '../../../ReceiptData/PDFInput');
 
     constructor() {
     }
 
     // Prompt user to select a PDF file
     public async selectPDFPrompt(): Promise<string | undefined> {
-        console.log(PdfHandler.pdfDirectory);
         const pdfFiles = this.getPDFList(PdfHandler.pdfDirectory);
 
         if (pdfFiles.length === 0) {

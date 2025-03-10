@@ -1,0 +1,22 @@
+{
+    "PersonA": [
+        {
+            "description": "Default Line Item"
+        }
+    ],
+    "PersonB": [
+        {
+            "description": "Default Line Item"
+        }
+    ],
+    "Shared": [
+        {
+            "description": "Default Line Item"
+        }
+    ],
+    "Unknown": [
+        {
+            "description": "Default Line Item"
+        }
+    ]
+}
