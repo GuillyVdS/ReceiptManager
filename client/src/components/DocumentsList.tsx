@@ -49,10 +49,14 @@ const DocumentList: React.FC<DocumentListProps> = ({ onProcessFile }) => {
             return;
         }
 
+
+
         // Create FormData object to send as multipart/form-data
         const formData = new FormData();
+        formData.append('documentName', enforcePdf(documentName));
+        //it is very important to ensure the document name comes before the file,
+        //  on the server, Multer does not appear able to catch any additional fields after the last file has been received..
         formData.append('pdf', fileUpload);  // 'pdf' is the field name on the server
-        formData.append('documentName', documentName);  // Add the document name to the form data
 
         try {
             // Post the file to the server
@@ -90,9 +94,18 @@ const DocumentList: React.FC<DocumentListProps> = ({ onProcessFile }) => {
         }
     };
 
-    const handleDocumentNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setDocumentName(event.target.value);
+    const handleDocumentNameBlur = () => {
+        let value = documentName;
+
+        setDocumentName(enforcePdf(value));
     };
+
+    const enforcePdf = (name: string) => {
+        if (!name.endsWith('.pdf') || name.length == 0) {
+            return name + '.pdf';
+        }
+        return name;
+    }
 
     return (
         <div>
@@ -140,7 +153,8 @@ const DocumentList: React.FC<DocumentListProps> = ({ onProcessFile }) => {
                     <TextField
                         label="Document Name"
                         value={documentName}
-                        onChange={handleDocumentNameChange}
+                        onChange={(e) => setDocumentName(e.target.value)}
+                        onBlur={handleDocumentNameBlur}
                         margin="normal"
                     />
                     <Button
