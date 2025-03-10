@@ -24,8 +24,9 @@ coverage/
 .env
 
 # Ignore all files inside output and pdfinput, but keep the folders
-ReceiptData/Output/*
+ReceiptData/Processed/*
 ReceiptData/PDFInput/*
+ReceiptData/Allocations.json
 
 # Ignore all files inside output and pdfinput, but keep the folders
 allocations.Testing
@@ -36,3 +37,4 @@ allocations.Testing
 
 # Ignore coverage reports
 coverage/
+
