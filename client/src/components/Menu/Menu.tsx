@@ -1,8 +1,8 @@
 // src/components/Menu/Menu.tsx
 import { useState } from 'react';
 import { MainMenu } from './MainMenu';
-import { ReceiptsMenu } from './ReceiptsMenu';
-import { AllocationsMenu } from './AllocationsMenu';
+import { Receipts } from '../ReceiptManagement/Receipts';
+import { Allocations } from '../AllocationManagement/Allocations';
 
 export const Menu = ({ onExit }: { onExit: () => void }) => {
   const [currentMenu, setCurrentMenu] = useState<'mainMenu' | 'manageReceipts' | 'manageAllocations'>('mainMenu');
@@ -41,8 +41,8 @@ export const Menu = ({ onExit }: { onExit: () => void }) => {
   return (
     <div>
       {currentMenu === 'mainMenu' && <MainMenu onSelect={handleAction} />}
-      {currentMenu === 'manageReceipts' && <ReceiptsMenu onSelect={handleAction} />}
-      {currentMenu === 'manageAllocations' && <AllocationsMenu onSelect={handleAction} />}
+      {currentMenu === 'manageReceipts' && <Receipts onSelect={handleAction} />}
+      {currentMenu === 'manageAllocations' && <Allocations onSelect={handleAction} />}
     </div>
   );
 };

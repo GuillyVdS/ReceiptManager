@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import { Button } from "@mui/material";
+import DocumentList from "./DocumentsList";
 import ReceiptGrid from "./ReceiptGrid";
-import DocumentList from "../DocumentsList";
+import DocumentUpload from "./DocumentUpload";
 
-export const ReceiptsMenu = ({ onSelect }: { onSelect: (action: string) => void }) => {
+export const Receipts = ({ onSelect }: { onSelect: (action: string) => void }) => {
     const [lineItems, setLineItems] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [refreshDocuments, setRefreshDocuments] = useState(false);
+    const [showReceiptGrid, setShowReceiptGrid] = useState(false); // New state variable
 
     useEffect(() => {
         //console.log("Updated Line Items:", lineItems);
@@ -33,6 +36,7 @@ export const ReceiptsMenu = ({ onSelect }: { onSelect: (action: string) => void 
             }));
 
             setLineItems(mappedItems);  // Update the state with the mapped items
+            setShowReceiptGrid(true); // Show the ReceiptGrid
         } catch (error) {
             setError('Error fetching receipts. Please try again.');
             console.error(error);
@@ -41,26 +45,26 @@ export const ReceiptsMenu = ({ onSelect }: { onSelect: (action: string) => void 
         }
     };
 
+    const handleUploadSuccess = () => {
+        setRefreshDocuments(prev => !prev); // Toggle the state to trigger a refresh
+    };
+
     return (
         <div>
             <h1>Manage Receipts</h1>
-            <DocumentList onProcessFile={fetchReceipts} />
-            {/* <Button variant="contained" color="primary" onClick={fetchReceipts}>
-                Add new receipt
-            </Button> */}
+            {showReceiptGrid ? (
+                <ReceiptGrid rows={lineItems}/>
+            ) : (
+                <>
+                    <DocumentList onProcessFile={fetchReceipts} refresh={refreshDocuments} />
+                    <DocumentUpload onUploadSuccess={handleUploadSuccess} />
+                </>
+            )}
             <Button variant="contained" color="primary" onClick={() => onSelect('back')}>
                 Back
             </Button>
-
             {loading && <p>Loading...</p>}
             {error && <p style={{ color: 'red' }}>{error}</p>}
-
-            <h2>Line Items</h2>
-            {lineItems.length > 0 ? (
-                <ReceiptGrid rows={lineItems} />
-            ) : (
-                !loading && <p>No items found. and {lineItems.length}</p>
-            )}
         </div>
     );
 }
