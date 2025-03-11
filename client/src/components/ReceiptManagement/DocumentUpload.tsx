@@ -52,12 +52,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFileUpload, onUploadS
                 }
             });
 
-            if (!response.ok) {
-                throw new Error('File upload failed');
-            }
-
-            const result = await response.json();
-            console.log('File uploaded successfully:', result);
+            console.log('File uploaded successfully:', response);
             alert("File uploaded successfully!");
 
             // Hide the upload form after successful upload
