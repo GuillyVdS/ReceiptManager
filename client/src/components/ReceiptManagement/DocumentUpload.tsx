@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button, TextField, Typography, Box, Paper } from '@mui/material';
 import { styled } from '@mui/system';
+import axios from 'axios';
 
 interface DocumentUploadProps {
     onFileUpload?: (document: string | null) => void; // Optional parent handler function
@@ -45,9 +46,10 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFileUpload, onUploadS
 
         try {
             // Post the file to the server
-            const response = await fetch('http://localhost:5000/uploadPdf', {
-                method: 'POST',
-                body: formData,
+            const response = await axios.post('http://localhost:5000/uploadPdf', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
             });
 
             if (!response.ok) {

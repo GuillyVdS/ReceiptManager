@@ -1,11 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Button, List, ListItem, ListItemButton, ListItemText, Typography } from '@mui/material';
 import { styled } from '@mui/system';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 
 interface DocumentListProps {
     onProcessFile: (document: string | null) => void; // Parent handler function
     refresh: boolean; // Prop to trigger refresh
 }
+
+// Define the type for the server response
+interface Response {
+    pdfFiles: string[];
+}
+
+// Fetch function to get data from the server
+const fetchDocuments = async (): Promise<Response> => {
+    const response = await axios.get<Response>('http://localhost:5000/pdfList');
+    return response.data;
+};
 
 const StyledList = styled(List)(({ theme }) => ({
     width: '100%',
@@ -22,25 +35,22 @@ const StyledListItem = styled(ListItem)(({ theme }) => ({
 }));
 
 const DocumentList: React.FC<DocumentListProps> = ({ onProcessFile, refresh }) => {
-    const [documents, setDocuments] = useState<string[]>([]);
+    const queryClient = useQueryClient();
+    const { data, error, isLoading } = useQuery<Response>({ queryKey: ['files'], queryFn: fetchDocuments });
     const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
 
-    const fetchDocuments = async () => {
-        try {
-            const response = await fetch('http://localhost:5000/pdfList');
-            const data = await response.json();
-            const pdfFiles: string[] = data.pdfFiles || [];
-
-            setDocuments(pdfFiles);
-        } catch (error) {
-            console.error('Error fetching documents:', error);
-        }
-    };
-
-    // Fetch document list when component mounts or when refresh prop changes
+    // Refetch document list when refresh prop changes
     useEffect(() => {
-        fetchDocuments();
-    }, [refresh]);
+        queryClient.invalidateQueries({ queryKey: ['files'] });
+    }, [refresh, queryClient]);
+
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
+
+    if (error) {
+        return <div>An error occurred: {error.message}</div>;
+    }
 
     const handleItemClick = (doc: string) => {
         setSelectedDocument(prevSelected => {
@@ -55,7 +65,7 @@ const DocumentList: React.FC<DocumentListProps> = ({ onProcessFile, refresh }) =
                 Documents
             </Typography>
             <StyledList>
-                {documents.map((doc, index) => (
+                {data?.pdfFiles.map((doc, index) => (
                     <StyledListItem key={index} disablePadding>
                         <ListItemButton
                             selected={selectedDocument === doc}
