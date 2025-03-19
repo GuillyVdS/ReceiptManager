@@ -119,8 +119,12 @@ namespace ReceiptsApi.Controllers
                                     {
                                         var ext = Path.GetExtension(file);
                                         var baseName = Path.GetFileNameWithoutExtension(file);
-                                        var originalName = System.Text.RegularExpressions.Regex.Replace(baseName, @"-\d+$", "") + ext;
-                                        return originalName;
+                                        var originalName = System.Text.RegularExpressions.Regex.Replace(baseName, @"-\d+$", "");
+                                        return new
+                                        {
+                                            originalName = originalName + ext,
+                                            baseName = baseName + ext
+                                        };
                                     })
                                     .ToList();
 
