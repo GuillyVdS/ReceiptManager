@@ -46,7 +46,8 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFileUpload, onUploadS
 
         try {
             // Post the file to the server
-            const response = await axios.post('http://localhost:5000/uploadPdf', formData, {
+            const response = await axios.post('http://localhost:5152/api/pdf/uploadPdf', formData, {
+                //const response = await axios.post('http://localhost:5000/uploadPdf', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }

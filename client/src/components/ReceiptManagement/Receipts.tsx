@@ -3,6 +3,7 @@ import { Button } from "@mui/material";
 import DocumentList from "./DocumentsList";
 import ReceiptGrid from "./ReceiptGrid";
 import DocumentUpload from "./DocumentUpload";
+import axios from "axios";
 
 export const Receipts = ({ onSelect }: { onSelect: (action: string) => void }) => {
     const [lineItems, setLineItems] = useState<any[]>([]);
@@ -12,7 +13,7 @@ export const Receipts = ({ onSelect }: { onSelect: (action: string) => void }) =
     const [showReceiptGrid, setShowReceiptGrid] = useState(false); // New state variable
 
     useEffect(() => {
-        //console.log("Updated Line Items:", lineItems);
+
     }, [lineItems]);
 
     const fetchReceipts = async (document: string | null) => {
@@ -23,19 +24,29 @@ export const Receipts = ({ onSelect }: { onSelect: (action: string) => void }) =
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`http://localhost:5000/lineItems/${document}`);
-            if (!response.ok) throw new Error('Failed to fetch receipts');
-            const data = await response.json();
+
+            const response = await axios.post(`http://localhost:5152/api/pdf/processPDF/${document}`);
+            if (response.status !== 200) throw new Error('Failed to fetch receipts');
+            const data = response.data;
+
+            setLineItems(data);  // Update the state with the mapped items for dotnet server
+
+            //node functionality######################
+            //const response = await fetch(`http://localhost:5000/lineItems/${document}`);
+            //if (!response.ok) throw new Error('Failed to fetch receipts');
+            //const data = await response.json();
 
             // Map the server response to match the column structure
-            const mappedItems = data.items.map((item: any, index: number) => ({
-                id: index + 1,
-                category: 'TEST',
-                description: item.description,
-                amount: item.amount
-            }));
+            // const mappedItems = data.items.map((item: any, index: number) => ({
+            //     id: index + 1,
+            //     category: 'TEST',
+            //     description: item.description,
+            //     amount: item.amount
+            // }));
 
-            setLineItems(mappedItems);  // Update the state with the mapped items
+            //setLineItems(mappedItems);
+            //############################################
+
             setShowReceiptGrid(true); // Show the ReceiptGrid
         } catch (error) {
             setError('Error fetching receipts. Please try again.');
@@ -53,16 +64,16 @@ export const Receipts = ({ onSelect }: { onSelect: (action: string) => void }) =
         <div>
             <h1>Manage Receipts</h1>
             {showReceiptGrid ? (
-                <ReceiptGrid rows={lineItems}/>
+                <ReceiptGrid rows={lineItems} onBack={() => setShowReceiptGrid(false)} />
             ) : (
                 <>
                     <DocumentList onProcessFile={fetchReceipts} refresh={refreshDocuments} />
                     <DocumentUpload onUploadSuccess={handleUploadSuccess} />
+                    <Button variant="contained" color="primary" onClick={() => onSelect('back')}>
+                        Back
+                    </Button>
                 </>
             )}
-            <Button variant="contained" color="primary" onClick={() => onSelect('back')}>
-                Back
-            </Button>
             {loading && <p>Loading...</p>}
             {error && <p style={{ color: 'red' }}>{error}</p>}
         </div>

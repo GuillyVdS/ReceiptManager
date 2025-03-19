@@ -1,48 +1,98 @@
+import { useState } from 'react';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { Button, Stack } from '@mui/material';
 import Paper from '@mui/material/Paper';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+
+
 
 interface TableProps {
     rows: any[];
+    onBack: () => void;
 }
 
-const columns: GridColDef[] = [
-    { field: 'id', headerName: 'ID', width: 50 },
-    { field: 'category', headerName: 'Allocated To: ', width: 150 },
-    {
-        field: 'description',
-        headerName: 'Item Description: ',
-        type: 'string',
-        width: 500,
-    },
-    {
-        field: 'amount',
-        headerName: 'Item Amount:',
-        type: 'number',
-        //description: 'This column has a value getter and is not sortable.',
-        //sortable: false,
-        width: 150,
-        valueGetter: (value: number) => {
-            const amount = value;
-            return amount != null ? `£${amount.toFixed(2)}` : '';
+interface Category {
+    categoryId: number;
+    categoryName: string;
+}
+
+async function fetchCategories(): Promise<Category[]> {
+    const response = await axios.get('http://localhost:5152/api/pdf/categories');
+    return response.data;
+}
+
+export default function ReceiptGrid({ rows, onBack }: TableProps) {
+    const { data: categories, error, isLoading } = useQuery<Category[]>({
+        queryKey: ['categories'],
+        queryFn: fetchCategories,
+    });
+    const [updatedRows, setUpdatedRows] = useState(rows);
+
+    const handleSave = () => {
+        console.log('Save button clicked');
+    };
+
+    const columns: GridColDef[] = [
+        { field: 'itemId', headerName: 'ID', width: 50 },
+        {
+            field: 'categoryId',
+            headerName: 'Allocated To:',
+            width: 150,
+            type: 'singleSelect',
+            valueOptions: Array.isArray(categories)
+                ? categories.map((category) => ({
+                    value: category.categoryId,
+                    label: category.categoryName,
+                }))
+                : [],
+            editable: true
         },
-        //valueGetter: (value, row) => `${row.firstName || ''} ${row.lastName || ''}`,
-    },
-];
+        {
+            field: 'description',
+            headerName: 'Item Description:',
+            type: 'string',
+            width: 500
+        },
+        {
+            field: 'quantity',
+            headerName: 'Item Quantity:',
+            type: 'number',
+            width: 150
+        },
+        {
+            field: 'price',
+            headerName: 'Item Price:',
+            type: 'number',
+            width: 150,
+            valueGetter: (value: number) => {
+                const price = value;
+                return price != null ? `£${price.toFixed(2)}` : '';
+            }
+        },
+    ];
 
-//const paginationModel = { page: 0, pageSize: 5 };
-
-export default function ReceiptGrid({ rows }: TableProps) {
     return (
         <Paper sx={{ height: '50vh', width: '100%' }}>
             <DataGrid
-                rows={rows}
+                rows={updatedRows}
                 columns={columns}
-                disableVirtualization={true} //i do not work with huge data sets so for perfomance this can be disabled
-                //initialState={{ pagination: { paginationModel } }}
-                //pageSizeOptions={[5, 10]}
-                //checkboxSelection
+                getRowId={(row) => row.itemId}
+                editMode="cell"
+                disableVirtualization={true} // I do not work with huge data sets, so for performance, this can be disabled
                 sx={{ border: 0 }}
             />
+            <Stack
+                direction="row"
+                spacing={2}
+                sx={{ marginBottom: 2, justifyContent: 'center' }}>
+                <Button variant="contained" color="primary" onClick={onBack}>
+                    Back
+                </Button>
+                <Button variant="contained" color="primary" onClick={handleSave}>
+                    Save Receipt
+                </Button>
+            </Stack>
         </Paper>
     );
 }

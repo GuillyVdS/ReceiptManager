@@ -16,7 +16,8 @@ interface Response {
 
 // Fetch function to get data from the server
 const fetchDocuments = async (): Promise<Response> => {
-    const response = await axios.get<Response>('http://localhost:5000/pdfList');
+    const response = await axios.get<Response>('http://localhost:5152/api/pdf/pdfList');
+    //const response = await axios.get<Response>('http://localhost:5000/api/pdf/pdfList');
     return response.data;
 };
 
