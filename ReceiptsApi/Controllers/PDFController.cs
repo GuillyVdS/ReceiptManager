@@ -89,6 +89,45 @@ namespace ReceiptsApi.Controllers
             }
         }
 
+        // POST: api/pdf/uploadPdf
+        [HttpPost("uploadPdf")]
+        public IActionResult UploadPdf([FromForm] IFormFile pdf, [FromForm] string documentName)
+        {
+            if (pdf == null || pdf.Length == 0)
+            {
+                return BadRequest("No file was uploaded.");
+            }
+
+            try
+            {
+                // Use the provided documentName or fallback to the original file name
+                var fileName = string.IsNullOrEmpty(documentName) ? pdf.FileName : documentName;
+                var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                var extension = Path.GetExtension(fileName);
+                var baseName = Path.GetFileNameWithoutExtension(fileName);
+                fileName = $"{baseName}-{timestamp}{extension}";
+
+                // Save the file
+                var filePath = Path.Combine(_pdfFolderPath, fileName);
+                if (!Directory.Exists(_pdfFolderPath))
+                {
+                    Directory.CreateDirectory(_pdfFolderPath);
+                }
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    pdf.CopyTo(stream);
+                }
+
+                return Ok(new { message = "File uploaded successfully", fileName });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
         // POST: api/pdf/createReceipt
         [HttpPost("createReceipt")]
         public IActionResult CreateReceipt(List<ReceiptLineItemDTO> receiptItems)
@@ -124,6 +163,27 @@ namespace ReceiptsApi.Controllers
                 Console.WriteLine($"Error: {ex.Message}");
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
+        }
+
+        // Private helper method to save the PDF
+        private string SavePdfToFolder(IFormFile file)
+        {
+            var fileName = Path.GetFileName(file.FileName);
+            var filePath = Path.Combine(_pdfFolderPath, fileName);
+
+            // Ensure the directory exists
+            if (!Directory.Exists(_pdfFolderPath))
+            {
+                Directory.CreateDirectory(_pdfFolderPath);
+            }
+
+            // Save the file
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                file.CopyTo(stream);
+            }
+
+            return fileName;
         }
     }
 }
