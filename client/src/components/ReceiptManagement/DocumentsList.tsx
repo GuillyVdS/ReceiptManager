@@ -11,12 +11,13 @@ interface DocumentListProps {
 
 // Define the type for the server response
 interface Response {
-    pdfFiles: string[];
+    pdfFiles: { originalName: string; baseName: string }[];
 }
 
 // Fetch function to get data from the server
 const fetchDocuments = async (): Promise<Response> => {
-    const response = await axios.get<Response>('http://localhost:5000/pdfList');
+    const response = await axios.get<Response>('http://localhost:5152/api/pdf/pdfList');
+    //const response = await axios.get<Response>('http://localhost:5000/api/pdf/pdfList');
     return response.data;
 };
 
@@ -68,23 +69,23 @@ const DocumentList: React.FC<DocumentListProps> = ({ onProcessFile, refresh }) =
                 {data?.pdfFiles.map((doc, index) => (
                     <StyledListItem key={index} disablePadding>
                         <ListItemButton
-                            selected={selectedDocument === doc}
-                            onClick={() => handleItemClick(doc)}
+                            selected={selectedDocument === doc.baseName}
+                            onClick={() => handleItemClick(doc.baseName)}
                             sx={{
                                 // Override backgroundColor for the selected state
-                                backgroundColor: selectedDocument === doc ? '#0056b3' : 'transparent',
-                                color: selectedDocument === doc ? '#fff' : '#000',  // Text color for selected item
+                                backgroundColor: selectedDocument === doc.baseName ? '#0056b3' : 'transparent',
+                                color: selectedDocument === doc.baseName ? '#fff' : '#000',  // Text color for selected item
                                 '&.Mui-selected': {
                                     backgroundColor: '#0056b3',  // Override the default selected background color
                                     color: '#fff',  // Ensure text is white when selected
                                 },
                                 '&:hover': {
-                                    backgroundColor: selectedDocument === doc ? '#004494' : '#1976d2',  // Hover state for selected vs unselected
+                                    backgroundColor: selectedDocument === doc.baseName ? '#004494' : '#1976d2',  // Hover state for selected vs unselected
                                     color: '#fff',  // Hover text color
                                 }
                             }}
                         >
-                            <ListItemText primary={doc} />
+                            <ListItemText primary={doc.originalName} />
                         </ListItemButton>
                     </StyledListItem>
                 ))}

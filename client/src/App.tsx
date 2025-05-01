@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { Menu } from './components/Menu/Menu';
 import './App.css'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient();
 
 function App() {
   const [exit, setExit] = useState(false);
@@ -21,7 +24,9 @@ function App() {
 
   return (
     <>
-      <Menu onExit={handleExit} /> {/* Render the Menu */}
+      <QueryClientProvider client={queryClient}>
+        <Menu onExit={handleExit} /> {/* Render the Menu */}
+      </QueryClientProvider>
     </>
   )
 }
