@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridRowModel } from '@mui/x-data-grid';
 import { Button, Stack } from '@mui/material';
 import Paper from '@mui/material/Paper';
 import { useQuery } from '@tanstack/react-query';
@@ -30,7 +30,17 @@ export default function ReceiptGrid({ rows, onBack }: TableProps) {
     const [updatedRows, setUpdatedRows] = useState(rows);
 
     const handleSave = () => {
-        console.log('Save button clicked');
+        axios.post('http://localhost:5152/api/pdf/createReceipt', updatedRows);
+    };
+
+    const handleProcessRowUpdate = (newRow: GridRowModel) => {
+        console.log('HERE: ', newRow);
+        setUpdatedRows((prevRows) =>
+            prevRows.map((row) =>
+                row.itemId === newRow.itemId ? { ...row, ...newRow } : row
+            )
+        );
+        return newRow; // Return the updated row
     };
 
     const columns: GridColDef[] = [
@@ -81,6 +91,7 @@ export default function ReceiptGrid({ rows, onBack }: TableProps) {
                 editMode="cell"
                 disableVirtualization={true} // I do not work with huge data sets, so for performance, this can be disabled
                 sx={{ border: 0 }}
+                processRowUpdate={handleProcessRowUpdate}
             />
             <Stack
                 direction="row"

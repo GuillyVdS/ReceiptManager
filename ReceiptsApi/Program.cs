@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
 using Microsoft.Extensions.Logging;
-using ReceiptsApi.Services;
 
 public class Program
 {
@@ -35,6 +34,9 @@ public class Program
                               $"Password={Environment.GetEnvironmentVariable("DB_PASSWORD")}"));
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+        builder.Services.AddScoped<IReceiptRepository, ReceiptRepository>();
+        builder.Services.AddScoped<ILineItemRepository, LineItemRepository>();
+        builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
         builder.Services.AddScoped<ReceiptService>();
         var app = builder.Build();
 
