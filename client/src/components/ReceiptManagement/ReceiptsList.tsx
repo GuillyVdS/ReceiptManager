@@ -1,28 +1,29 @@
 //should aim to inherit a generic list and then use this for both receipts and documents
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import GenericList from '../GenericList';
 
 interface ReceiptsListProps {
-    onProcessReceipt: (receipt: string | null) => void;
+    onProcessReceipt: (receipt: number | null) => void;
     refresh: boolean;
 }
 
 interface Receipt {
-    id: string;
-    name: string;
+    receiptId: number;
+    receiptName: string;
 }
 
 const fetchReceipts = async (): Promise<Receipt[]> => {
-    const response = await axios.get<{ receipts: Receipt[] }>('http://localhost:5152/api/receipts/list');
+    const response = await axios.get<{ receipts: Receipt[] }>('http://localhost:5152/api/receipt/list');
     return response.data.receipts;
 };
 
 const ReceiptsList: React.FC<ReceiptsListProps> = ({ onProcessReceipt, refresh }) => {
     const queryClient = useQueryClient();
     const { data, error, isLoading } = useQuery<Receipt[]>({ queryKey: ['receipts'], queryFn: fetchReceipts });
+    const [selectedReceipt, setSelectedReceipt] = useState<Receipt | null>(null);
 
     useEffect(() => {
         queryClient.invalidateQueries({ queryKey: ['receipts'] });
@@ -41,17 +42,20 @@ const ReceiptsList: React.FC<ReceiptsListProps> = ({ onProcessReceipt, refresh }
             <GenericList
                 title="Receipts"
                 items={data || []}
-                getItemKey={item => item.id}
-                getItemLabel={item => item.name}
-                onItemSelect={selected => onProcessReceipt(selected?.id || null)}
+                getItemKey={item => item.receiptId}
+                getItemLabel={item => `${item.receiptId} - ${new Date(item.receiptName).toLocaleDateString()}`}
+                onItemSelect={setSelectedReceipt}
+                selectedItem={selectedReceipt}
+            //onItemSelect={selected => onProcessReceipt(selected?.receiptId?.toString() || null)}
             />
             <Button
                 variant="contained"
                 color="primary"
-                onClick={() => onProcessReceipt(null)}
-                disabled={!data || data.length === 0}
+                onClick={() => onProcessReceipt(selectedReceipt?.receiptId || null)}
+                disabled={!selectedReceipt}
+            //disabled={!data || data.length === 0}
             >
-                Process Selected Receipt
+                View Receipt Details
             </Button>
         </div>
     );

@@ -17,26 +17,7 @@ namespace ReceiptsApi.Controllers
             _receiptService = receiptService;
         }
 
-        // GET: api/pdf/categories
-        [HttpGet("categories")]
-        public IActionResult GetCategories()
-        {
-            try
-            {
-                var categories = _receiptService.GetCategories();
-                return Ok(categories.Select(category => new
-                {
-                    CategoryId = category.CategoryId,
-                    CategoryName = category.CategoryName
-                }));
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
+        
         // POST: api/pdf/processPDF
         [HttpPost("processPDF/{document}")]
         public IActionResult ProcessPDF(string document)

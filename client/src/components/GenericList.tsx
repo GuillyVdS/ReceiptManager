@@ -5,7 +5,7 @@ import { styled } from '@mui/system';
 interface GenericListProps<T> {
     title: string;
     items: T[];
-    getItemKey: (item: T) => string;
+    getItemKey: (item: T) => string | number; // Accept string or number
     getItemLabel: (item: T) => string;
     onItemSelect: (item: T | null) => void;
     selectedItem?: T | null; // <-- Add this line

@@ -10,6 +10,7 @@ import axios from 'axios';
 interface TableProps {
     rows: any[];
     onBack: () => void;
+    isNewReceipt: boolean;
 }
 
 interface Category {
@@ -18,11 +19,11 @@ interface Category {
 }
 
 async function fetchCategories(): Promise<Category[]> {
-    const response = await axios.get('http://localhost:5152/api/pdf/categories');
+    const response = await axios.get('http://localhost:5152/api/receipt/categories');
     return response.data;
 }
 
-export default function ReceiptGrid({ rows, onBack }: TableProps) {
+export default function ReceiptGrid({ rows, onBack, isNewReceipt }: TableProps) {
     const { data: categories, error, isLoading } = useQuery<Category[]>({
         queryKey: ['categories'],
         queryFn: fetchCategories,
@@ -30,7 +31,7 @@ export default function ReceiptGrid({ rows, onBack }: TableProps) {
     const [updatedRows, setUpdatedRows] = useState(rows);
 
     const handleSave = () => {
-        axios.post('http://localhost:5152/api/pdf/createReceipt', updatedRows);
+        axios.post('http://localhost:5152/api/receipt/createReceipt', updatedRows);
     };
 
     const handleProcessRowUpdate = (newRow: GridRowModel) => {
@@ -89,7 +90,7 @@ export default function ReceiptGrid({ rows, onBack }: TableProps) {
                 columns={columns}
                 getRowId={(row) => row.itemId}
                 editMode="cell"
-                disableVirtualization={true} // I do not work with huge data sets, so for performance, this can be disabled
+                disableVirtualization={true} //currently not working with huge data sets, so for performance, this can be disabled
                 sx={{ border: 0 }}
                 processRowUpdate={handleProcessRowUpdate}
             />
@@ -100,8 +101,18 @@ export default function ReceiptGrid({ rows, onBack }: TableProps) {
                 <Button variant="contained" color="primary" onClick={onBack}>
                     Back
                 </Button>
-                <Button variant="contained" color="primary" onClick={handleSave}>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleSave}
+                    disabled={isNewReceipt}>
                     Save Receipt
+                </Button>
+                <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={console.log('Delete Receipt')}>
+                    Delete Receipt
                 </Button>
             </Stack>
         </Paper>

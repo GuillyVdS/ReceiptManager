@@ -8,56 +8,49 @@ import ReceiptsList from "./ReceiptsList";
 
 type view = 'menu' | 'documents' | 'receiptsList' | 'receiptGrid';
 
+type FetchReceiptsParams =
+    | { mode: 'document', document: string }
+    | { mode: 'receipt', receiptId: number };
+
 export const Receipts = ({ onSelect }: { onSelect: (action: string) => void }) => {
     const [lineItems, setLineItems] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [refreshDocuments, setRefreshDocuments] = useState(false);
-    const [showReceiptGrid, setShowReceiptGrid] = useState(false);
     const [view, setView] = useState<view>('menu');
+    const [isNewReceipt, setIsNewReceipt] = useState(false);
 
     useEffect(() => {
 
     }, [lineItems]);
 
-    const fetchReceipts = async (document: string | null) => {
-        if (!document) {
-            console.log('No document selected');
-            return;
-        }
+    const fetchReceipts = async (params: FetchReceiptsParams) => {
         setLoading(true);
         setError(null);
         try {
-
-            const response = await axios.post(`http://localhost:5152/api/pdf/processPDF/${document}`);
-            if (response.status !== 200) throw new Error('Failed to fetch receipts');
-            const data = response.data;
-
-            setLineItems(data);  // Update the state with the mapped items for dotnet server
-
-            //node functionality######################
-            //const response = await fetch(`http://localhost:5000/lineItems/${document}`);
-            //if (!response.ok) throw new Error('Failed to fetch receipts');
-            //const data = await response.json();
-
-            // Map the server response to match the column structure
-            // const mappedItems = data.items.map((item: any, index: number) => ({
-            //     id: index + 1,
-            //     category: 'TEST',
-            //     description: item.description,
-            //     amount: item.amount
-            // }));
-
-            //setLineItems(mappedItems);
-            //############################################
-
-            setShowReceiptGrid(true); // Show the ReceiptGrid
+            let data;
+            if (params.mode === 'document') {
+                // Process PDF and get line items
+                const response = await axios.post(`http://localhost:5152/api/pdf/processPDF/${params.document}`);
+                if (response.status !== 200) throw new Error('Failed to process PDF');
+                data = response.data;
+                setIsNewReceipt(false);
+            } else if (params.mode === 'receipt') {
+                // Get line items for existing receipt
+                const response = await axios.get(`http://localhost:5152/api/receipt/${params.receiptId}`);
+                if (response.status !== 200) throw new Error('Failed to fetch receipt line items');
+                data = response.data.items || response.data;
+                setIsNewReceipt(true);
+            }
+            setLineItems(data);
+            setView('receiptGrid');
         } catch (error) {
             setError('Error fetching receipts. Please try again.');
             console.error(error);
         } finally {
             setLoading(false);
         }
+
     };
 
     const handleUploadSuccess = () => {
@@ -94,13 +87,15 @@ export const Receipts = ({ onSelect }: { onSelect: (action: string) => void }) =
                 </>
             )}
             {view === 'receiptGrid' && (
-                <ReceiptGrid rows={lineItems} onBack={() => setView('documents')} />
+                <ReceiptGrid rows={lineItems}
+                    onBack={() => setView('menu')}
+                    isNewReceipt={isNewReceipt} />
             )}
             {view === 'receiptsList' && (
                 <>
                     <h1>Manage Receipts</h1>
                     <ReceiptsList
-                        onProcessReceipt={() => setView('receiptGrid')}
+                        onProcessReceipt={receiptId => fetchReceipts({ mode: 'receipt', receiptId: Number(receiptId) })}
                         refresh={refreshDocuments}
                     />
                     <Button
@@ -115,7 +110,11 @@ export const Receipts = ({ onSelect }: { onSelect: (action: string) => void }) =
             {view === 'documents' && (
                 <>
                     <h1>Manage Documents</h1>
-                    <DocumentList onProcessFile={fetchReceipts} refresh={refreshDocuments} />
+                    <DocumentList onProcessFile={document => {
+                        if (typeof document === 'string') {
+                            fetchReceipts({ mode: 'document', document });
+                        }
+                    }} refresh={refreshDocuments} />
                     <DocumentUpload onUploadSuccess={handleUploadSuccess} />
                     <Button
                         variant="outlined"

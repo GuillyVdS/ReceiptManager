@@ -44,6 +44,27 @@ public class ReceiptService
         return receipt;
     }
 
+    //currently this collects all receipt data. we don't really need to do this but it is useful for debugging
+    //should probably get GetSimpleReceiptList & GetReceiptLines 
+    public List<ReceiptDTO> GetReceiptList()
+    {
+        var receipts = _repository.GetReceiptList();
+        return receipts.Select(receipt => new ReceiptDTO
+        {
+            ReceiptId = receipt.ReceiptId,
+            Date = receipt.Date,
+            Items = receipt.ReceiptItems.Select(ri => new ReceiptLineItemDTO
+            {
+                ItemId = ri.LineItemId,
+                Description = ri.LineItem.Description,
+                categoryId = ri.CategoryId,
+                CategoryName = ri.Category.CategoryName,
+                Quantity = ri.Quantity,
+                Price = ri.Price
+            }).ToList()
+        }).ToList();
+    }
+
     public ReceiptDTO GetReceiptById(int receiptId)
     {
         var receipt = _repository.GetReceiptById(receiptId);
@@ -53,6 +74,7 @@ public class ReceiptService
         return new ReceiptDTO
         {
             ReceiptId = receipt.ReceiptId,
+            Date = receipt.Date,
             Items = receipt.ReceiptItems.Select(ri => new ReceiptLineItemDTO
             {
                 ItemId = ri.LineItemId,
