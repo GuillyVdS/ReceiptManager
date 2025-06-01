@@ -4,13 +4,17 @@ import DocumentList from "./DocumentsList";
 import ReceiptGrid from "./ReceiptGrid";
 import DocumentUpload from "./DocumentUpload";
 import axios from "axios";
+import ReceiptsList from "./ReceiptsList";
+
+type view = 'menu' | 'documents' | 'receiptsList' | 'receiptGrid';
 
 export const Receipts = ({ onSelect }: { onSelect: (action: string) => void }) => {
     const [lineItems, setLineItems] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [refreshDocuments, setRefreshDocuments] = useState(false);
-    const [showReceiptGrid, setShowReceiptGrid] = useState(false); // New state variable
+    const [showReceiptGrid, setShowReceiptGrid] = useState(false);
+    const [view, setView] = useState<view>('menu');
 
     useEffect(() => {
 
@@ -62,15 +66,63 @@ export const Receipts = ({ onSelect }: { onSelect: (action: string) => void }) =
 
     return (
         <div>
-            <h1>Manage Receipts</h1>
-            {showReceiptGrid ? (
-                <ReceiptGrid rows={lineItems} onBack={() => setShowReceiptGrid(false)} />
-            ) : (
+            {view === 'menu' && (
                 <>
+                    <h1>Receipts Menu</h1>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => setView('documents')}
+                        style={{ marginRight: 8 }}
+                    >
+                        Upload & Process Receipt
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => setView('receiptsList')}
+                    >
+                        View Receipts List
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => onSelect('mainMenu')}
+                    >
+                        Back to Main Menu
+                    </Button>
+                </>
+            )}
+            {view === 'receiptGrid' && (
+                <ReceiptGrid rows={lineItems} onBack={() => setView('documents')} />
+            )}
+            {view === 'receiptsList' && (
+                <>
+                    <h1>Manage Receipts</h1>
+                    <ReceiptsList
+                        onProcessReceipt={() => setView('receiptGrid')}
+                        refresh={refreshDocuments}
+                    />
+                    <Button
+                        variant="outlined"
+                        onClick={() => setView('menu')}
+                        style={{ marginTop: 16 }}
+                    >
+                        Back to Menu
+                    </Button>
+                </>
+            )}
+            {view === 'documents' && (
+                <>
+                    <h1>Manage Documents</h1>
                     <DocumentList onProcessFile={fetchReceipts} refresh={refreshDocuments} />
                     <DocumentUpload onUploadSuccess={handleUploadSuccess} />
-                    <Button variant="contained" color="primary" onClick={() => onSelect('back')}>
-                        Back
+                    <Button
+                        variant="outlined"
+                        onClick={() => setView('menu')}
+                        style={{ marginTop: 16 }}
+                    >
+                        Back to Menu
                     </Button>
                 </>
             )}

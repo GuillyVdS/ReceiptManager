@@ -12,7 +12,7 @@ export const Allocations = ({ onSelect }: { onSelect: (action: string) => void }
         <Button variant="contained" color="primary" onClick={() => onSelect('resetAllocations')}>
             Reset allocations
         </Button>
-        <Button variant="contained" color="primary" onClick={() => onSelect('back')}>
+        <Button variant="contained" color="primary" onClick={() => onSelect('mainMenu')}>
             Back
         </Button>
     </div>
