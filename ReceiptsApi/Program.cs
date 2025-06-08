@@ -38,6 +38,7 @@ public class Program
         builder.Services.AddScoped<ILineItemRepository, LineItemRepository>();
         builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
         builder.Services.AddScoped<ReceiptService>();
+        builder.Services.AddScoped<AllocationService>();
         var app = builder.Build();
 
         // Configure the HTTP request pipeline.

@@ -25,16 +25,25 @@ public class ReceiptService
             throw new ArgumentException("Receipt items cannot be null or empty.");
         }
 
+        // Add new line items and update categories as needed
+        var upToDateLineItems = AddItemsToDatabase(receiptItems);
+
         // Create a new receipt
         var receipt = new Receipt
         {
             Date = DateTime.UtcNow,
-            ReceiptItems = receiptItems.Select(item => new ReceiptLineItem
+            ReceiptItems = receiptItems.Select(item =>
             {
-                LineItemId = item.ItemId,
-                CategoryId = item.categoryId,
-                Quantity = item.Quantity,
-                Price = item.Price
+                var itemRecord = upToDateLineItems
+                    .FirstOrDefault(li => li.Description.ToLower() == item.Description.Trim().ToLower());
+
+                return new ReceiptLineItem
+                {
+                    LineItemId = itemRecord.LineItemId,
+                    CategoryId = item.categoryId,
+                    Quantity = item.Quantity,
+                    Price = item.Price
+                };
             }).ToList()
         };
 
@@ -87,79 +96,44 @@ public class ReceiptService
         };
     }
 
-    public List<ReceiptLineItem> AddItemsToDatabase(List<ReceiptLineItemDTO> lineItems)
+    public List<LineItem> AddItemsToDatabase(List<ReceiptLineItemDTO> lineItems)
     {
-        var receiptLineItems = new List<ReceiptLineItem>();
-
-        // Get descriptions from DTOs
-        var lineItemDescriptions = lineItems.Select(item => item.Description?.ToLower()).ToList();
-
-        // Fetch existing line items from the repository
+        var lineItemDescriptions = lineItems.Select(item => item.Description?.Trim().ToLower()).ToList();
         var existingLineItems = _lineItemRepository.GetLineItemsByDescriptions(lineItemDescriptions);
-
-        // Prepare new line items to add
         var newLineItemsToAdd = new List<LineItem>();
+
         foreach (var item in lineItems)
         {
-            item.Description = item.Description?.Trim();
+            var desc = item.Description?.Trim().ToLower();
+            var itemRecord = existingLineItems.FirstOrDefault(li => li.Description.ToLower() == desc);
 
-            // Check if the line item already exists
-            var itemRecord = existingLineItems
-                .FirstOrDefault(li => li.Description != null &&
-                                      item.Description != null &&
-                                      li.Description.ToLower() == item.Description.ToLower());
-
-            // If no record exists, create a new one
             if (itemRecord == null)
             {
                 var newLineItem = new LineItem
                 {
                     Description = item.Description,
-                    CategoryId = 1 // Default category
+                    CategoryId = item.categoryId
                 };
-
                 newLineItemsToAdd.Add(newLineItem);
+            }
+            else
+            {
+                // Only update the global LineItem category if setDefaultCategory is true
+                if (item.setDefaultCategory && itemRecord.CategoryId != item.categoryId)
+                {
+                    itemRecord.CategoryId = item.categoryId;
+                    _lineItemRepository.UpdateLineItem(itemRecord);
+                }
             }
         }
 
-        // Add new line items to the database
         if (newLineItemsToAdd.Any())
         {
             _lineItemRepository.AddLineItems(newLineItemsToAdd);
             existingLineItems.AddRange(newLineItemsToAdd);
         }
 
-        // Fetch categories from the category repository
-        var categories = _categoryRepository.GetAllCategories();
-
-        // Create ReceiptLineItems
-        foreach (var item in lineItems)
-        {
-            var itemRecord = existingLineItems
-                .FirstOrDefault(li => li.Description != null &&
-                                      item.Description != null &&
-                                      li.Description.ToLower() == item.Description.ToLower());
-
-            if (itemRecord != null)
-            {
-                var category = categories.FirstOrDefault(c => c.CategoryId == itemRecord.CategoryId);
-                if (category != null)
-                {
-                    item.CategoryName = category.CategoryName;
-                }
-            }
-
-            var receiptLineItem = new ReceiptLineItem
-            {
-                LineItem = itemRecord,
-                Quantity = item.Quantity,
-                Price = item.Price
-            };
-
-            receiptLineItems.Add(receiptLineItem);
-        }
-
-        return receiptLineItems;
+        return existingLineItems;
     }
 
     public List<Category> GetCategories()
@@ -170,24 +144,50 @@ public class ReceiptService
     public List<ReceiptLineItemDTO> ProcessPDF(string document, string pdfFolderPath)
     {
         PDFParser parser = new PDFParser();
-        var lineItems = parser.ParsePdf(document, pdfFolderPath);
+        var parsedLineItems = parser.ParsePdf(document, pdfFolderPath);
 
-        if (lineItems == null || !lineItems.Any())
+        if (parsedLineItems == null || !parsedLineItems.Any())
         {
             throw new InvalidOperationException("No line items were extracted from the PDF.");
         }
+        //originally saved any new items directly to the db, however this was premature as we need to establish categorie first which takes place client-side
+        //furthermore, there is no guarantee the client-side will save the receipt, as this process can be cancelled after the server returns the processed line items.
+        //var receiptLineItems = AddItemsToDatabase(lineItems);
 
-        var receiptLineItems = AddItemsToDatabase(lineItems);
+        // Get all descriptions from parsed items
+        var descriptions = parsedLineItems
+            .Select(item => item.Description?.Trim().ToLower())
+            .Where(desc => !string.IsNullOrEmpty(desc))
+            .ToList();
 
-        return receiptLineItems.Select(item => new ReceiptLineItemDTO
+        // Fetch existing line items from the DB
+        var existingLineItems = _lineItemRepository.GetLineItemsByDescriptions(descriptions);
+
+        // Fetch all categories
+        var categories = _categoryRepository.GetAllCategories();
+
+        // Map parsed items to DTOs, using DB info if available
+        var result = parsedLineItems.Select(parsed =>
         {
-            Description = item.LineItem?.Description ?? "Unknown Item",
-            categoryId = item.Category?.CategoryId ?? 1,
-            CategoryName = item.Category?.CategoryName ?? "Unknown",
-            ItemId = item.LineItem.LineItemId,
-            Quantity = item.Quantity,
-            Price = item.Price
+            var desc = parsed.Description?.Trim().ToLower();
+            var existing = existingLineItems.FirstOrDefault(li => li.Description.ToLower() == desc);
+
+            int itemId = existing?.LineItemId ?? 0;
+            int categoryId = existing?.CategoryId ?? 1;
+            string categoryName = categories.FirstOrDefault(c => c.CategoryId == categoryId)?.CategoryName ?? "Unknown";
+
+            return new ReceiptLineItemDTO
+            {
+                ItemId = itemId,
+                Description = parsed.Description ?? "Unknown Item",
+                categoryId = categoryId,
+                CategoryName = categoryName,
+                Quantity = parsed.Quantity,
+                Price = parsed.Price
+            };
         }).ToList();
+
+        return result;
     }
 
     public List<(string originalName, string baseName)> GetPDFFiles(string pdfFolderPath)

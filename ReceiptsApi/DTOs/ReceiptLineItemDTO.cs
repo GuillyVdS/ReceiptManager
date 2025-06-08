@@ -9,5 +9,6 @@ namespace ReceiptsApi.DTOs
 
         public decimal Price { get; set; }
         public int Quantity { get; set; }
+        public bool setDefaultCategory { get; set; } // only used to enable/disable override of default category in lineItems table
     }
 }
