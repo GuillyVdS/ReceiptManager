@@ -12,17 +12,20 @@
     "start": "npm run server --workspace server"
   },
   "devDependencies": {
-    "typescript": "^5.8.2",
-    "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0",
+    "concurrently": "^7.3.0",
     "eslint": "^9.21.0",
-    "typescript-eslint": "^8.24.1",
     "eslint-plugin-react-hooks": "^5.1.0",
     "prettier": "^2.7.1",
-    "concurrently": "^7.3.0"
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.24.1"
   },
   "workspaces": [
     "client",
     "server"
-  ]
+  ],
+  "dependencies": {
+    "react-toastify": "^11.0.5"
+  }
 }
