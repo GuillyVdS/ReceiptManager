@@ -31,7 +31,7 @@ const GenericList = <T,>({
     getItemKey,
     getItemLabel,
     onItemSelect,
-    selectedItem: controlledSelectedItem, // <-- Use this prop
+    selectedItem: controlledSelectedItem,
 }: GenericListProps<T>) => {
     const [uncontrolledSelectedItem, setUncontrolledSelectedItem] = useState<T | null>(null);
 

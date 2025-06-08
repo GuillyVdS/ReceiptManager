@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { Button } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import GenericList from '../GenericList';
+import GenericList from '../Generics/GenericList';
 
 interface DocumentListProps {
-    onProcessFile: (document: string | null) => void;
+    onProcessFile: (lineItems: any[] | null) => void; // Now expects line items, not just document name
     refresh: boolean;
 }
 
@@ -19,26 +19,41 @@ const fetchDocuments = async (): Promise<Document[]> => {
     return response.data.pdfFiles;
 };
 
-const DocumentList: React.FC<DocumentListProps> = ({ onProcessFile, refresh }) => {
+const processPdf = async (document: string) => {
+    const response = await axios.post(`http://localhost:5152/api/pdf/processPDF/${document}`);
+    if (response.status !== 200) throw new Error('Failed to process PDF');
+    return response.data;
+};
+
+const DocumentsList: React.FC<DocumentListProps> = ({ onProcessFile, refresh }) => {
     const queryClient = useQueryClient();
     const { data, error, isLoading } = useQuery<Document[]>({ queryKey: ['documents'], queryFn: fetchDocuments });
     const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+    const [processing, setProcessing] = useState(false);
 
     useEffect(() => {
         if (refresh) {
             queryClient.invalidateQueries({ queryKey: ['documents'] });
             setSelectedDocument(null);
         }
+    }, [refresh, queryClient]);
 
-    }, [refresh]);
+    const handleProcess = async () => {
+        if (!selectedDocument) return;
+        setProcessing(true);
+        try {
+            const lineItems = await processPdf(selectedDocument.baseName);
+            onProcessFile(lineItems);
+        } catch (err) {
+            alert('Failed to process PDF');
+            onProcessFile(null);
+        } finally {
+            setProcessing(false);
+        }
+    };
 
-    if (isLoading) {
-        return <div>Loading...</div>;
-    }
-
-    if (error) {
-        return <div>An error occurred: {error.message}</div>;
-    }
+    if (isLoading) return <div>Loading...</div>;
+    if (error) return <div>An error occurred: {error.message}</div>;
 
     return (
         <div>
@@ -53,13 +68,13 @@ const DocumentList: React.FC<DocumentListProps> = ({ onProcessFile, refresh }) =
             <Button
                 variant="contained"
                 color="primary"
-                onClick={() => onProcessFile(selectedDocument?.baseName || null)}
-                disabled={!selectedDocument}
+                onClick={handleProcess}
+                disabled={!selectedDocument || processing}
             >
-                Process Selected File
+                {processing ? "Processing..." : "Process Selected File"}
             </Button>
         </div>
     );
 };
 
-export default DocumentList;
+export default DocumentsList;
