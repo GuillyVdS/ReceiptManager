@@ -2,9 +2,7 @@
 import { useState } from 'react';
 import { MainMenu } from './MainMenu';
 import { Receipts } from '../ReceiptManagement/Receipts';
-import { ReceiptsMenu } from '../ReceiptManagement/ReceiptsMenu';
 import { Allocations } from '../AllocationManagement/Allocations';
-import ReceiptsList from '../ReceiptManagement/ReceiptsList';
 
 export const Menu = ({ onExit }: { onExit: () => void }) => {
   const [currentMenu, setCurrentMenu] = useState<'mainMenu' | 'receiptsList' | 'receipts' | 'manageAllocations' | 'processReceipt'>('mainMenu');
