@@ -5,12 +5,18 @@ import { Receipts } from '../ReceiptManagement/Receipts';
 import { Allocations } from '../AllocationManagement/Allocations';
 
 export const Menu = ({ onExit }: { onExit: () => void }) => {
-  const [currentMenu, setCurrentMenu] = useState<'mainMenu' | 'manageReceipts' | 'manageAllocations'>('mainMenu');
+  const [currentMenu, setCurrentMenu] = useState<'mainMenu' | 'receiptsList' | 'receipts' | 'manageAllocations' | 'processReceipt'>('mainMenu');
 
   const handleAction = (action: string) => {
     switch (action) {
-      case 'manageReceipts':
-        setCurrentMenu('manageReceipts');
+      case 'receiptsMenu':
+        setCurrentMenu('receipts');
+        break;
+      case 'processReceipt':
+        setCurrentMenu('processReceipt');
+        break;
+      case 'receiptsList':
+        setCurrentMenu('receiptsList');
         break;
       case 'manageAllocations':
         setCurrentMenu('manageAllocations');
@@ -19,7 +25,7 @@ export const Menu = ({ onExit }: { onExit: () => void }) => {
         onExit(); // Trigger exit
         break;
       case 'addReceipt':
-        setCurrentMenu('manageReceipts');
+        setCurrentMenu('receipts');
         break;
       case 'viewAllocations':
         console.log('View current allocations');
@@ -30,7 +36,7 @@ export const Menu = ({ onExit }: { onExit: () => void }) => {
       case 'resetAllocations':
         console.log('Reset allocations');
         break;
-      case 'back':
+      case 'mainMenu':
         setCurrentMenu('mainMenu');
         break;
       default:
@@ -41,7 +47,7 @@ export const Menu = ({ onExit }: { onExit: () => void }) => {
   return (
     <div>
       {currentMenu === 'mainMenu' && <MainMenu onSelect={handleAction} />}
-      {currentMenu === 'manageReceipts' && <Receipts onSelect={handleAction} />}
+      {currentMenu === 'receipts' && <Receipts onSelect={handleAction} />}
       {currentMenu === 'manageAllocations' && <Allocations onSelect={handleAction} />}
     </div>
   );

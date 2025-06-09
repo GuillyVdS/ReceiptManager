@@ -1,15 +1,16 @@
 import { useState } from 'react';
-import { DataGrid, GridColDef, GridRowModel } from '@mui/x-data-grid';
+import { GridColDef, GridRowModel } from '@mui/x-data-grid';
 import { Button, Stack } from '@mui/material';
+import { toast } from 'react-toastify';
 import Paper from '@mui/material/Paper';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-
-
+import GenericGrid from '../Generics/GenericItemGrid';
 
 interface TableProps {
     rows: any[];
     onBack: () => void;
+    isNewReceipt: boolean;
 }
 
 interface Category {
@@ -18,26 +19,34 @@ interface Category {
 }
 
 async function fetchCategories(): Promise<Category[]> {
-    const response = await axios.get('http://localhost:5152/api/pdf/categories');
+    const response = await axios.get('http://localhost:5152/api/receipt/categories');
     return response.data;
 }
 
-export default function ReceiptGrid({ rows, onBack }: TableProps) {
+export default function ReceiptGrid({ rows, onBack, isNewReceipt }: TableProps) {
     const { data: categories, error, isLoading } = useQuery<Category[]>({
         queryKey: ['categories'],
         queryFn: fetchCategories,
     });
     const [updatedRows, setUpdatedRows] = useState(rows);
 
-    const handleSave = () => {
-        axios.post('http://localhost:5152/api/pdf/createReceipt', updatedRows);
+    const handleSave = async () => {
+        try {
+            await axios.post('http://localhost:5152/api/receipt/createReceipt', updatedRows);
+            // Optionally add a confirmation here, maybe an alert or toast?
+            toast.success('Receipt saved successfully!');
+            onBack(); // Go back to the menu after saving
+        } catch (error) {
+            toast.error('Failed to save receipt.');
+        }
     };
 
     const handleProcessRowUpdate = (newRow: GridRowModel) => {
         console.log('HERE: ', newRow);
         setUpdatedRows((prevRows) =>
             prevRows.map((row) =>
-                row.itemId === newRow.itemId ? { ...row, ...newRow } : row
+                row.itemId === newRow.itemId
+                    ? { ...row, ...newRow, setDefaultCategory: newRow.setDefaultCategory ?? true } : row
             )
         );
         return newRow; // Return the updated row
@@ -57,6 +66,13 @@ export default function ReceiptGrid({ rows, onBack }: TableProps) {
                 }))
                 : [],
             editable: true
+        },
+        {
+            field: 'setDefaultCategory',
+            headerName: 'Set as Default Category',
+            type: 'boolean',
+            width: 180,
+            editable: true,
         },
         {
             field: 'description',
@@ -84,13 +100,10 @@ export default function ReceiptGrid({ rows, onBack }: TableProps) {
 
     return (
         <Paper sx={{ height: '50vh', width: '100%' }}>
-            <DataGrid
+            <GenericGrid
                 rows={updatedRows}
                 columns={columns}
-                getRowId={(row) => row.itemId}
-                editMode="cell"
-                disableVirtualization={true} // I do not work with huge data sets, so for performance, this can be disabled
-                sx={{ border: 0 }}
+                getRowId={(row: { itemId: any; }) => row.itemId}
                 processRowUpdate={handleProcessRowUpdate}
             />
             <Stack
@@ -100,8 +113,18 @@ export default function ReceiptGrid({ rows, onBack }: TableProps) {
                 <Button variant="contained" color="primary" onClick={onBack}>
                     Back
                 </Button>
-                <Button variant="contained" color="primary" onClick={handleSave}>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleSave}
+                    disabled={isNewReceipt}>
                     Save Receipt
+                </Button>
+                <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={() => console.log('Delete Receipt')}>
+                    Delete Receipt
                 </Button>
             </Stack>
         </Paper>
