@@ -1,9 +1,12 @@
+using System.ComponentModel;
+
 public interface ILineItemRepository
 {
-    void AddLineItems(List<LineItem> lineItems);
-    void UpdateLineItem(LineItem lineItem);
+    Boolean AddLineItems(List<LineItem> lineItems);
+    Boolean UpdateLineItem(LineItem lineItem);
     LineItem? GetLineItemById(int lineItemId);
     List<LineItem> GetLineItemsByDescriptions(List<string> descriptions);
     List<LineItem> GetAllLineItems();
+    Boolean ResetLineItemCategories();
 
 }

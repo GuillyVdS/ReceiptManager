@@ -26,7 +26,11 @@ public class ReceiptService
         }
 
         // Add new line items and update categories as needed
-        var upToDateLineItems = AddItemsToDatabase(receiptItems);
+        var (updatedLineItems, failedUpdates) = AddItemsToDatabase(receiptItems);
+        if (failedUpdates.Any())
+        {
+            //need to add logging of failed updates
+        }
 
         // Create a new receipt
         var receipt = new Receipt
@@ -34,7 +38,7 @@ public class ReceiptService
             Date = DateTime.UtcNow,
             ReceiptItems = receiptItems.Select(item =>
             {
-                var itemRecord = upToDateLineItems
+                var itemRecord = updatedLineItems
                     .FirstOrDefault(li => li.Description.ToLower() == item.Description.Trim().ToLower());
 
                 return new ReceiptLineItem
@@ -96,11 +100,12 @@ public class ReceiptService
         };
     }
 
-    public List<LineItem> AddItemsToDatabase(List<ReceiptLineItemDTO> lineItems)
+    public (List<LineItem> updatedLineItems, List<LineItem> failedUpdates) AddItemsToDatabase(List<ReceiptLineItemDTO> lineItems)
     {
         var lineItemDescriptions = lineItems.Select(item => item.Description?.Trim().ToLower()).ToList();
         var existingLineItems = _lineItemRepository.GetLineItemsByDescriptions(lineItemDescriptions);
         var newLineItemsToAdd = new List<LineItem>();
+        var failedUpdates = new List<LineItem>();
 
         foreach (var item in lineItems)
         {
@@ -122,18 +127,29 @@ public class ReceiptService
                 if (item.setDefaultCategory && itemRecord.CategoryId != item.categoryId)
                 {
                     itemRecord.CategoryId = item.categoryId;
-                    _lineItemRepository.UpdateLineItem(itemRecord);
+                    bool updateSucceeded = _lineItemRepository.UpdateLineItem(itemRecord);
+                    if (!updateSucceeded)
+                    {
+                        failedUpdates.Add(itemRecord);
+                    }
                 }
             }
         }
 
         if (newLineItemsToAdd.Any())
         {
-            _lineItemRepository.AddLineItems(newLineItemsToAdd);
-            existingLineItems.AddRange(newLineItemsToAdd);
+            bool addSucceeded = _lineItemRepository.AddLineItems(newLineItemsToAdd);
+            if (!addSucceeded)
+            {
+                failedUpdates.AddRange(newLineItemsToAdd);
+            }
+            else
+            {
+                existingLineItems.AddRange(newLineItemsToAdd);
+            }
         }
 
-        return existingLineItems;
+        return (existingLineItems, failedUpdates);
     }
 
     public List<Category> GetCategories()

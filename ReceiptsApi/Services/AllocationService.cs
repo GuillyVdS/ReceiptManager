@@ -22,4 +22,17 @@ public class AllocationService
     {
         return _lineItemRepository.GetAllLineItems();
     }
+
+    public bool ResetAllocations()
+    {
+        try
+        {
+            _lineItemRepository.ResetLineItemCategories();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 }

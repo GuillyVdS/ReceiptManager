@@ -47,6 +47,21 @@ namespace ReceiptsApi.Controllers
             }
         }
 
+        [HttpPost("reset")]
+        public IActionResult ResetAllocations()
+        {
+            try
+            {
+                _allocationService.ResetAllocations();
+                return Ok(new { message = "Allocations saved (stub)." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
 
     }
 }

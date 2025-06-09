@@ -7,16 +7,32 @@ public class LineItemRepository : ILineItemRepository
         _context = context;
     }
 
-    public void AddLineItems(List<LineItem> lineItems)
+    public bool AddLineItems(List<LineItem> lineItems)
     {
-        _context.LineItems.AddRange(lineItems);
-        _context.SaveChanges();
+        try
+        {
+            _context.LineItems.AddRange(lineItems);
+            _context.SaveChanges();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
-    public void UpdateLineItem(LineItem lineItem)
+    public bool UpdateLineItem(LineItem lineItem)
     {
-        _context.LineItems.Update(lineItem);
-        _context.SaveChanges();
+        try
+        {
+            _context.LineItems.Update(lineItem);
+            _context.SaveChanges();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public LineItem? GetLineItemById(int lineItemId)
@@ -42,5 +58,23 @@ public class LineItemRepository : ILineItemRepository
     public List<LineItem> GetAllLineItems()
     {
         return _context.LineItems.ToList();
+    }
+
+    public bool ResetLineItemCategories()
+    {
+        try
+        {
+            var lineItems = _context.LineItems.ToList();
+            foreach (var lineItem in lineItems)
+            {
+                lineItem.CategoryId = 1; // Resetting the category ID to "Unknown"
+            }
+            _context.SaveChanges();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }
