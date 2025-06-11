@@ -183,12 +183,12 @@ public class ReceiptService
         var categories = _categoryRepository.GetAllCategories();
 
         // Map parsed items to DTOs, using DB info if available
-        var result = parsedLineItems.Select(parsed =>
+        var result = parsedLineItems.Select((parsed, idx) =>
         {
             var desc = parsed.Description?.Trim().ToLower();
             var existing = existingLineItems.FirstOrDefault(li => li.Description.ToLower() == desc);
 
-            int itemId = existing?.LineItemId ?? 0;
+            int itemId = existing?.LineItemId ?? -(idx + 1); // Assign negative unique ID for new items
             int categoryId = existing?.CategoryId ?? 1;
             string categoryName = categories.FirstOrDefault(c => c.CategoryId == categoryId)?.CategoryName ?? "Unknown";
 
