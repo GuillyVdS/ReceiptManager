@@ -5,8 +5,6 @@ import AllocationsGrid from "./AllocationsGrid";
 type view = 'menu' | 'allocations' | 'itemList' | 'receiptGrid';
 
 export const Allocations = ({ onSelect }: { onSelect: (action: string) => void }) => {
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [view, setView] = useState<view>('menu');
 
     return (
@@ -41,8 +39,6 @@ export const Allocations = ({ onSelect }: { onSelect: (action: string) => void }
             {view === 'allocations' && (
                 <AllocationsGrid onBack={() => setView('menu')} />
             )}
-            {loading && <p>Loading...</p>}
-            {error && <p style={{ color: 'red' }}>{error}</p>}
         </div>
     );
 }

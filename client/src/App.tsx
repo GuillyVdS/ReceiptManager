@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Menu } from './components/Menu/Menu';
 import './App.css'
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 

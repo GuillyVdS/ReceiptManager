@@ -24,7 +24,7 @@ async function fetchCategories(): Promise<Category[]> {
 }
 
 export default function ReceiptGrid({ rows, onBack, isNewReceipt }: TableProps) {
-    const { data: categories, error, isLoading } = useQuery<Category[]>({
+    const { data: categories } = useQuery<Category[]>({
         queryKey: ['categories'],
         queryFn: fetchCategories,
     });

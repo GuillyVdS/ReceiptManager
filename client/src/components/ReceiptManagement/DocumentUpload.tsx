@@ -14,7 +14,7 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
     borderRadius: theme.shape.borderRadius,
 }));
 
-const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFileUpload, onUploadSuccess }) => {
+const DocumentUpload: React.FC<DocumentUploadProps> = ({ onUploadSuccess }) => {
     const [fileUpload, setFileUpload] = useState<File | null>(null);
     const [documentName, setDocumentName] = useState<string>('');
     const [showUpload, setShowUpload] = useState<boolean>(false);
@@ -39,7 +39,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFileUpload, onUploadS
 
         // Create FormData object to send as multipart/form-data
         const formData = new FormData();
-        formData.append('documentName', enforcePdf(documentName));
+        formData.append('documentName', sanitizeDocNameInput(documentName));
         // it is very important to ensure the document name comes before the file,
         // on the server, Multer does not appear able to catch any additional fields after the last file has been received..
         formData.append('pdf', fileUpload);  // 'pdf' is the field name on the server
@@ -73,20 +73,25 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFileUpload, onUploadS
         }
     };
 
-    const handleDocumentNameBlur = () => {
-        setDocumentName(enforcePdf(documentName));
-    };
-
-    const enforcePdf = (name: string) => {
-        if (!name.endsWith('.pdf') || name.length == 0) {
-            return name + '.pdf';
-        }
-        return name;
-    };
-
     const toggleUpload = () => {
         setShowUpload(prevShowUpload => !prevShowUpload);
     };
+
+    const sanitizeDocNameInput = (name: string) => {
+        // Remove invalid characters
+        let sanitize = name.replace(/[\/\\:*?"<>|]/g, '');
+        // Remove path traversal
+        sanitize = sanitize.replace(/\.\./g, '');
+        // Trim whitespace
+        sanitize = sanitize.trim();
+        // Limit length
+        sanitize = sanitize.substring(0, 100);
+        // Enforce .pdf
+        if (!sanitize.endsWith('.pdf') || sanitize.length == 0) {
+            return sanitize + '.pdf';
+        }
+        return sanitize;
+    }
 
     return (
         <div>
@@ -111,8 +116,8 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onFileUpload, onUploadS
                             <TextField
                                 label="Document Name"
                                 value={documentName}
-                                onChange={(e) => setDocumentName(e.target.value)}
-                                onBlur={handleDocumentNameBlur}
+                                onChange={(e) => setDocumentName(sanitizeDocNameInput(e.target.value))}
+                                onBlur={() => setDocumentName(sanitizeDocNameInput(documentName))}
                                 margin="normal"
                                 fullWidth
                             />

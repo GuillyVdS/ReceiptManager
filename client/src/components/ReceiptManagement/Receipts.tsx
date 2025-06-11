@@ -12,8 +12,6 @@ export const Receipts = ({ onSelect }: { onSelect: (action: string) => void }) =
     const [lineItems, setLineItems] = useState<any[]>([]);
     const [isNewReceipt, setIsNewReceipt] = useState(false);
     const [refreshDocuments, setRefreshDocuments] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
     const handleShowLineItems = (items: any[] | null, isNew: boolean = true) => {
         if (items) {
@@ -84,8 +82,6 @@ export const Receipts = ({ onSelect }: { onSelect: (action: string) => void }) =
                     isNewReceipt={isNewReceipt}
                 />
             )}
-            {loading && <div>Loading...</div>}
-            {error && <div style={{ color: "red" }}>{error}</div>}
         </div>
     );
 };
