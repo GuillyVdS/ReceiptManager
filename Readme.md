@@ -14,8 +14,6 @@ A monorepo full-stack application for uploading, parsing, and managing Tesco Hom
 - [Usage](#usage)
 - [Development](#development)
 - [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-- [License](#license)
 
 ---
 
