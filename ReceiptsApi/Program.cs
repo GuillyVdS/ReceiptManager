@@ -8,19 +8,34 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        Env.Load();
+        var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+
+        if (environment == "Docker")
+        {
+            // No need to call Env.Load(); Docker injects env vars
+        }
+        else
+        {
+            DotNetEnv.Env.Load(".env.development");
+        }
 
         // Add this line to use Kestrel
         //builder.WebHost.UseKestrel();
 
         // Add services to the container.
         builder.Services.AddControllers();
+
+        // Read ALLOWED_ORIGINS from environment and split into array
+        var allowedOrigins = Environment.GetEnvironmentVariable("ALLOWED_ORIGINS")?
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            ?? Array.Empty<string>();
+
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowSpecificOrigin",
                 builder =>
                 {
-                    builder.WithOrigins("http://localhost:5173")
+                    builder.WithOrigins(allowedOrigins)
                            .AllowAnyMethod()
                            .AllowAnyHeader();
                 });
@@ -41,8 +56,14 @@ public class Program
         builder.Services.AddScoped<AllocationService>();
         var app = builder.Build();
 
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ReceiptsContext>();
+            db.Database.Migrate();
+        }
+
         // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
+        if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")
         {
             app.UseSwagger();
             app.UseSwaggerUI();

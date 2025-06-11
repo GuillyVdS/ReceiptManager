@@ -1,5 +1,0 @@
-This project aims to quickly analyze an emailed tesco receipt and determine how the bill should be split between two people.
-
-This is achieved by using PDF parser to analyze line items and by assigning these items to either or both persons responsible for paying off the receipt.
-
-Each time the program is ran, it will check the allocations.json file to look for previously identified line items. 

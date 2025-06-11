@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment: #create a .env file with these variables to set the database
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      ASPNETCORE_ENVIRONMENT: Docker
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+
+  receiptsapi:
+    build: ./ReceiptsApi
+    env_file:
+      - .env.docker
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - PDF_FOLDER_PATH=/app/ReceiptData/PDFInput
+    volumes:
+      - ./ReceiptsApi/ReceiptData/PDFInput:/app/ReceiptData/PDFInput # Mounting PDF input folder
+    ports:
+      - "5152:5152"
+    depends_on:
+      - db
+    command: sh -c "./wait-for-db.sh && dotnet WebServer.dll"
+  
+  client:
+    build: ./client
+    ports:
+      - "3000:80"
+    depends_on:
+      - receiptsapi
+
+volumes:
+  db_data:

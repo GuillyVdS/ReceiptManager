@@ -11,13 +11,19 @@ namespace ReceiptsApi.Controllers
 
         public PDFController(ReceiptService receiptService)
         {
-            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            var projectDirectory = Directory.GetParent(baseDirectory)?.Parent?.Parent?.Parent?.FullName;
-            _pdfFolderPath = Path.Combine(projectDirectory, "ReceiptData", "PDFInput");
+            var envPath = Environment.GetEnvironmentVariable("PDF_FOLDER_PATH");
+            if (string.IsNullOrEmpty(envPath))
+            {
+                // Fallback to local relative path for development
+                var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                var projectDirectory = Directory.GetParent(baseDirectory)?.Parent?.Parent?.Parent?.FullName;
+                envPath = Path.Combine(projectDirectory, "ReceiptData", "PDFInput");
+            }
+            _pdfFolderPath = envPath;
             _receiptService = receiptService;
         }
 
-        
+
         // POST: api/pdf/processPDF
         [HttpPost("processPDF/{document}")]
         public IActionResult ProcessPDF(string document)
