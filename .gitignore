@@ -5,7 +5,7 @@ node_modules/
 .vscode/
 
 # Ignore environment files (if any)
-.env
+.env*
 
 # ignore log and combined log
 logs/
