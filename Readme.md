@@ -73,17 +73,21 @@ For local development, use `.env.development` with similar variables.
 
 ### With Docker Compose
 
-1. **Build and start all services:**
+1. **Copy the example environment file:**
    ```sh
-   docker-compose up --build
+   cp .env.docker.example .env.docker
+   ```
+   Edit `.env.docker` if you want to change database credentials or other settings.
+
+2. **Build and start all services:**
+   ```sh
+   docker-compose --env-file .env.docker up --build
    ```
 
-2. **Access the frontend:**  
+3. **Access the frontend:**  
    [http://localhost:3000](http://localhost:3000)
 
-3. **Access the backend API (Swagger UI):** 
-
-    (or use PostMan)
+4. **Access the backend API (Swagger UI):**  
    [http://localhost:5152/swagger](http://localhost:5152/swagger)
 
 ---

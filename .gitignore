@@ -4,8 +4,13 @@ node_modules/
 # Ignore VSCode settings (optional)
 .vscode/
 
-# Ignore environment files (if any)
-.env*
+# Ignore environment files with secrets
+.env.docker
+.env
+.env.development
+
+# Do NOT ignore the example env file
+!.env.docker.example
 
 # ignore log and combined log
 logs/

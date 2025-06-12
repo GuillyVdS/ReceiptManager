@@ -11,12 +11,12 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:
-      - "${DB_PORT}:${DB_PORT}"
+      - "5432:5432"
 
   receiptsapi:
     build: ./ReceiptsApi
     env_file:
-      - .env.docker
+      - .env.docker 
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
       - PDF_FOLDER_PATH=/app/ReceiptData/PDFInput
