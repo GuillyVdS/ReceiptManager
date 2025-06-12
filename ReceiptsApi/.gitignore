@@ -89,9 +89,6 @@ local.settings.json
 # Ignore ASP.NET Scaffolding artifacts
 ScaffoldingReadMe.txt
 
-# Ignore Entity Framework Migrations
-Migrations/
-
 # Ignore database files
 *.mdf
 *.ldf
@@ -100,5 +97,8 @@ Migrations/
 .idea/
 *.sln.iml
 
-# Ignore test receipts
-/ReceiptData/
+# Ignore all files in ReceiptData and subfolders except .gitkeep
+ReceiptData/*
+!ReceiptData/.gitkeep
+ReceiptData/PDFInput/*
+!ReceiptData/PDFInput/.gitkeep
